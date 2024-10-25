@@ -32,6 +32,7 @@ class _AddChiTietBoDeScreenState extends State<AddChiTietBoDeScreen> {
       appBar: AppBar(
         title: Text("Thêm Chi tiết Bộ đề",style: TextStyle(color: Colors.white),),
         backgroundColor: AppColors.btnColor,
+        iconTheme: IconThemeData(color: Colors.white), 
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

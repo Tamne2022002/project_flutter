@@ -36,6 +36,7 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.backColor,
       appBar: AppBar(
         title: Text('Chỉnh sửa Bộ đề',style: TextStyle(color: Colors.white),),
            iconTheme: IconThemeData(color: Colors.white), 
@@ -50,7 +51,16 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
               // Dropdown cho chủ đề
               DropdownButtonFormField<int>(
                 value: chuDeId,
-                decoration: InputDecoration(labelText: 'Chủ đề'),
+                                style: TextStyle(color: Colors.white), 
+                decoration: InputDecoration(
+                  labelText: 'Chủ đề',
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.btnColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.btnColor),
+                  ),
+                ),
                 onChanged: (value) {
                   setState(() {
                     chuDeId = value;
@@ -74,7 +84,16 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
               // TextField cho số lượng câu
               TextFormField(
                 initialValue: soLuongCau.toString(),
-                decoration: InputDecoration(labelText: 'Số lượng câu'),
+                decoration: InputDecoration(
+                  labelText: 'Số lượng câu',
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                                style: TextStyle(color: Colors.white), 
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   setState(() {

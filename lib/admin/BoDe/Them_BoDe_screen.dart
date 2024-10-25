@@ -23,8 +23,9 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text('Thêm Bộ đề'),
+        title: Text('Thêm Bộ đề',style: TextStyle(color: Colors.white),),
         backgroundColor: AppColors.btnColor,
+        iconTheme: IconThemeData(color: Colors.white), 
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -1,12 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
 import 'package:project_flutter/layout/practice_screen.dart';
-import 'package:project_flutter/layout/solo_screen.dart';
+import 'package:project_flutter/layout/room_screen.dart';
+import 'package:project_flutter/layout/searchroom_screen.dart';
 
-class ModeScreen extends StatelessWidget {
-  const ModeScreen({super.key});
+class CompeteScreen extends StatelessWidget {
+  const CompeteScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class ModeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.btnColor,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white,),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -28,40 +28,40 @@ class ModeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.access_time, size: 120, color: Colors.white),
-            SizedBox(height: 40),
-            CustomButton(
-              icon: Icons.fitness_center,
-              text: 'Luyện tập',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => PracticeScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(1.0, 0.0);
-                      const end = Offset.zero;
-                      const curve = Curves.ease;
-
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                      var offsetAnimation = animation.drive(tween);
-
-                      return SlideTransition(
-                        position: offsetAnimation,
-                        child: child,
-                      );
-                    },
-                  ),
-                );
-              }, 
-            ),
+            SizedBox(height: 40), 
             CustomButton(
               icon: Icons.meeting_room,
-              text: 'Thi đấu',
+              text: 'Tạo phòng đấu',
               onPressed: () {
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => CompeteScreen(),
+                    pageBuilder: (context, animation, secondaryAnimation) => RoomScreen(),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0); // Start from the right
+                      const end = Offset.zero;
+                      const curve = Curves.ease;
+
+                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
+
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+            CustomButton(
+              icon: Icons.search,
+              text: 'Tìm phòng đấu',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) => SearchRoomScreen(),
                     transitionsBuilder: (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0);
                       const end = Offset.zero;
@@ -77,16 +77,11 @@ class ModeScreen extends StatelessWidget {
                     },
                   ),
                 );
-              }, 
+              },
             ),
-            // CustomButton(
-            //   icon: Icons.search,
-            //   text: 'Tìm phòng đấu',
-            //   onPressed: () {},
-            // ),
           ],
         ),
       ),
-    ); 
+    );
   }
 }

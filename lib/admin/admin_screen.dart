@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/admin/BoDe/BoDe.dart';
+import 'package:project_flutter/authen/service.dart';
 
 import 'package:project_flutter/color/Color.dart';
-import 'package:project_flutter/login_screen.dart';
+import 'package:project_flutter/authen/login_screen.dart';
 
 import 'ChuDe/ChuDe_Screen.dart'; // Import màn hình Topics
 import 'TaiKhoan/TaiKhoan_Screen.dart'; // Import màn hình Accounts
 import 'CauHoi/CauHoi_Screen.dart'; // Import màn hình Questions
 
 class AdminDashboard extends StatelessWidget {
+  final auth = AuthService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,9 +106,10 @@ class AdminDashboard extends StatelessWidget {
               child: Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async{
                 // Thực hiện đăng xuất và điều hướng về màn hình đăng nhập
                 Navigator.pop(context); // Đóng dialog
+                auth.signout(); //Đăng xuất ra
                 Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => LoginScreen()),

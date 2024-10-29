@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "820921726206",
+    "project_id": "doandidong-69432",
+    "storage_bucket": "doandidong-69432.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:820921726206:android:764d85be16af1c88ee61af",
+        "android_client_info": {
+          "package_name": "com.example.project_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdDdYihOvGRdQEDdHXNNyX05-JIteWbR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

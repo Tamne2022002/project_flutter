@@ -1,22 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/admin/admin_screen.dart';
+import 'package:project_flutter/forgot_password_screen.dart';
 import 'package:project_flutter/register_sceen.dart';
-
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   Widget _buildTextField(String label, IconData icon, bool isPassword) {
     return TextFormField(
-      keyboardType: isPassword ? TextInputType.visiblePassword : TextInputType.emailAddress,
+      keyboardType: isPassword
+          ? TextInputType.visiblePassword
+          : TextInputType.emailAddress,
       obscureText: isPassword,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.white),
         border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+        enabledBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+        focusedBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
         prefixIcon: Icon(icon, color: Colors.white),
       ),
       style: TextStyle(color: Colors.white),
@@ -35,11 +39,17 @@ class LoginScreen extends StatelessWidget {
               children: [
                 Text(
                   'Chào mừng',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 48.0, color: Colors.white),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 48.0,
+                      color: Colors.white),
                 ),
                 Text(
                   'hãy đăng nhập tài khoản của bạn',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24.0, color: Colors.white),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24.0,
+                      color: Colors.white),
                 ),
                 SizedBox(height: 25),
                 _buildTextField('Tên đăng nhập', Icons.email, false),
@@ -48,13 +58,21 @@ class LoginScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      onPressed: () {
-                        print('Forgot Password!');
-                      },
-                      child: Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(color: Colors.white, fontSize: 12.0),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ForgotPasswordScreen()),
+                          );
+                          print('Forgot Password!');
+                        },
+                        child: Text(
+                          'Quên mật khẩu?',
+                          style: TextStyle(color: Colors.white, fontSize: 12.0),
+                        ),
                       ),
                     ),
                   ],
@@ -64,12 +82,14 @@ class LoginScreen extends StatelessWidget {
                   clipBehavior: Clip.antiAliasWithSaveLayer,
                   width: double.infinity,
                   height: 60,
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(100)),
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(100)),
                   child: MaterialButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => AdminDashboard()),
+                        MaterialPageRoute(
+                            builder: (context) => AdminDashboard()),
                       );
                     },
                     color: Color(0xFF998DA6),
@@ -92,7 +112,8 @@ class LoginScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          CupertinoPageRoute(builder: (context) => RegisterSceen()),
+                          CupertinoPageRoute(
+                              builder: (context) => RegisterSceen()),
                         );
                         print('Sign Up');
                       },

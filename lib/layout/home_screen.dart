@@ -14,14 +14,14 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.btnColor, // Light purple top bar
         leading: IconButton(
-          icon: Icon(Icons.menu),
+          icon: Icon(Icons.menu, color: Colors.white),
           onPressed: () {},
         ),
-        title: Text('TRANG CHỦ', style: TextStyle(fontSize: 20)),
+        title: Text('TRANG CHỦ', style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: () {},
           ),
         ],

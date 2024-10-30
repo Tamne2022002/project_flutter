@@ -5,6 +5,8 @@ import 'package:project_flutter/admin/BoDe/Them_BoDe_screen.dart';
 import 'package:project_flutter/admin/BoDe/Them_ChiTietBoDe.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/bode.dart';
+import 'package:project_flutter/model/topic.dart';
+import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 
 class BoDeScreen extends StatefulWidget {
   @override
@@ -13,12 +15,15 @@ class BoDeScreen extends StatefulWidget {
 
 class _BoDeScreenState extends State<BoDeScreen> {
   List<BoDe> boDeList = [];
+  List<Topic> chuDeList = []; // Thay đổi kiểu dữ liệu để lưu danh sách chủ đề
   final BoDeService boDeService = BoDeService();
+  final TopicService topicService = TopicService();
 
   @override
   void initState() {
     super.initState();
     _loadBoDes(); // Gọi hàm để tải danh sách bộ đề
+    _loadChuDes(); // Gọi hàm để tải danh sách chủ đề
   }
 
   // Tải danh sách bộ đề từ Firestore
@@ -29,13 +34,20 @@ class _BoDeScreenState extends State<BoDeScreen> {
         boDeList = loadedBoDes; // Cập nhật danh sách bộ đề
       });
     } catch (e) {
-      // Xử lý lỗi nếu có
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Lỗi tải dữ liệu: $e')));
     }
   }
 
-  List<String> chuDeList = ['Đề tài 1', 'Đề tài 2', 'Đề tài 3'];
+  // Tải danh sách chủ đề từ Firestore
+  Future<void> _loadChuDes() async {
+    try {
+      chuDeList = await topicService.loadTopics(); // Tải danh sách chủ đề
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Lỗi tải chủ đề: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,12 +153,13 @@ class _BoDeScreenState extends State<BoDeScreen> {
       MaterialPageRoute(
         builder: (context) => EditBoDeScreen(
           boDe: boDe,
-          chuDeList: chuDeList,
+          chuDeList: chuDeList, // Sử dụng danh sách chủ đề tải từ Firestore
           onSave: (updatedBoDe) {
             setState(() {
               boDe.soLuongCau = updatedBoDe.soLuongCau;
               boDe.chuDeId = updatedBoDe.chuDeId;
               boDe.trangThai = updatedBoDe.trangThai;
+              _loadBoDes();
             });
           },
         ),
@@ -191,11 +204,11 @@ class _BoDeScreenState extends State<BoDeScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AddBoDeScreen(
-          chuDeList: chuDeList,
+          chuDeList: chuDeList, // Sử dụng danh sách chủ đề tải từ Firestore
           onSave: (newBoDe) {
-            setState(() {
-              boDeList.add(newBoDe);
-            });
+            // Gọi lại để tải danh sách bộ đề và danh sách chủ đề
+            _loadBoDes();
+            _loadChuDes(); // Tải lại danh sách chủ đề
           },
         ),
       ),

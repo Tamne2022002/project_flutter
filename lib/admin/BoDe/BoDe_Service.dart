@@ -4,14 +4,14 @@ import 'package:project_flutter/model/bode.dart';
 
 class BoDeService {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  final TopicService topicService = TopicService(); 
+  final TopicService topicService = TopicService();
 
   // Tải danh sách bộ đề
   Future<List<BoDe>> loadBoDes() async {
     final snapshot = await firestore.collection('BoDe').get();
     List<BoDe> loadedBoDes = [];
 
-    List<Future<void>> futures = []; 
+    List<Future<void>> futures = [];
 
     for (var doc in snapshot.docs) {
       var data = doc.data();
@@ -22,16 +22,16 @@ class BoDeService {
         createAt: (data['create_at'] as Timestamp).toDate(),
         updateAt: (data['update_at'] as Timestamp).toDate(),
         trangThai: data['TrangThai'] ?? 1,
-        tenChuDe: '', 
+        tenChuDe: '',
       );
 
       futures.add(
         topicService.getTenChuDe(boDe.chuDeId).then((tenChuDe) {
-          boDe.tenChuDe = tenChuDe; 
+          boDe.tenChuDe = tenChuDe;
         }),
       );
 
-      loadedBoDes.add(boDe); 
+      loadedBoDes.add(boDe);
     }
 
     await Future.wait(futures);
@@ -51,14 +51,24 @@ class BoDeService {
     });
   }
 
-  // Cập nhật bộ đề
   Future<void> updateBoDe(BoDe boDe) async {
-    await firestore.collection('BoDe').doc(boDe.boDeId.toString()).update({
-      'ChuDe_ID': boDe.chuDeId,
-      'SoLuongCau': boDe.soLuongCau,
-      'update_at': Timestamp.fromDate(DateTime.now()), // Cập nhật thời gian
-      'TrangThai': boDe.trangThai,
-    });
+    // Tìm tài liệu bằng ID
+    var querySnapshot = await firestore
+        .collection('BoDe')
+        .where('BoDe_ID', isEqualTo: boDe.boDeId)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      // Cập nhật tài liệu nếu tồn tại
+      await querySnapshot.docs.first.reference.update({
+        'ChuDe_ID': boDe.chuDeId,
+        'SoLuongCau': boDe.soLuongCau,
+        'update_at': Timestamp.fromDate(DateTime.now()), // Cập nhật thời gian
+        'TrangThai': boDe.trangThai,
+      });
+    } else {
+      throw Exception('Không tìm thấy bộ đề với ID: ${boDe.boDeId}');
+    }
   }
 
   // Xóa bộ đề

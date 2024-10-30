@@ -118,6 +118,7 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                   if (_formKey.currentState!.validate()) {
                     // Cập nhật lại thông tin bộ đề
                     widget.onSave(BoDe(
+                      
                       boDeId: widget.boDe.boDeId, // Giữ nguyên ID bộ đề
                       chuDeId: chuDeId!,
                       soLuongCau: soLuongCau,

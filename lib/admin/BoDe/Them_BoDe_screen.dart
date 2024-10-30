@@ -3,13 +3,12 @@ import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/bode.dart';
 import 'package:project_flutter/model/topic.dart';
-
-
+import 'package:project_flutter/admin/BoDe/BoDe_Service.dart';
 
 class AddBoDeScreen extends StatefulWidget {
   final Function(BoDe) onSave;
 
-  AddBoDeScreen({required this.onSave, required List<String> chuDeList});
+  AddBoDeScreen({required this.onSave, required List<Topic> chuDeList}); 
 
   @override
   _AddBoDeScreenState createState() => _AddBoDeScreenState();
@@ -20,19 +19,29 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
   int? chuDeId;
   int soLuongCau = 0;
   int trangThai = 1;
-  List<Topic> chuDeList = []; // Danh sách các Topic
+  List<Topic> chuDeList = [];
+  List<BoDe> boDeList = [];
+  
   bool isLoading = true;
+  final BoDeService boDeService = BoDeService();
 
   @override
   void initState() {
     super.initState();
     loadTopics();
+    _loadBoDes(); // Gọi hàm tải bộ đề
+  }
+
+  Future<void> _loadBoDes() async {
+    boDeList = await boDeService.loadBoDes();
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<void> loadTopics() async {
     TopicService topicService = TopicService();
-    // Giả sử loadTopics trả về List<Topic>
-    chuDeList = await topicService.loadTopics(); 
+    chuDeList = await topicService.loadTopics();
     setState(() {
       isLoading = false;
     });
@@ -53,9 +62,8 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Dropdown cho chủ đề
               isLoading
-                  ? CircularProgressIndicator() // Hiển thị loading nếu đang tải
+                  ? CircularProgressIndicator()
                   : DropdownButtonFormField<int>(
                       dropdownColor: AppColors.btnColor,
                       value: chuDeId,
@@ -76,7 +84,7 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
                       },
                       items: chuDeList.map((topic) {
                         return DropdownMenuItem<int>(
-                          value: topic.ChuDe_ID, // Gán chuDeId cho giá trị
+                          value: topic.ChuDe_ID,
                           child: Text(topic.TenChuDe),
                         );
                       }).toList(),
@@ -88,7 +96,6 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
                       },
                     ),
               SizedBox(height: 20),
-              // TextField cho số lượng câu
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Số lượng câu',
@@ -114,19 +121,26 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
                 },
               ),
               SizedBox(height: 20),
-              // Nút Lưu
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    // Gọi hàm lưu nếu tất cả các trường hợp hợp lệ
-                    widget.onSave(BoDe(
-                      boDeId: DateTime.now().millisecondsSinceEpoch,
+                    // Gán ID mới cho bộ đề
+                    int newBoDeId = boDeList.isNotEmpty ? boDeList.length + 1 : 1;
+
+                    BoDe newBoDe = BoDe(
+                      boDeId: newBoDeId,
                       chuDeId: chuDeId!,
                       soLuongCau: soLuongCau,
                       createAt: DateTime.now(),
                       updateAt: DateTime.now(),
                       trangThai: trangThai,
-                    ));
+                    );
+
+                    // Gọi hàm thêm bộ đề
+                    await boDeService.addBoDe(newBoDe);
+
+                    // Thực hiện callback
+                    widget.onSave(newBoDe);
                     Navigator.pop(context);
                   }
                 },

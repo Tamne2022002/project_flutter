@@ -99,7 +99,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
             ElevatedButton(
               onPressed: () async {
                 if (titleController.text.isNotEmpty) {
-                  int newChuDeID = (_topics.isNotEmpty ? _topics.last.ChuDe_ID + 1 : 0); // Tính toán ChuDe_ID mới
+                  int newChuDeID = (_topics.isNotEmpty ? _topics.last.ChuDe_ID + 1 : 1); // Tính toán ChuDe_ID mới
                   await _topicService.addTopic(titleController.text, newChuDeID);
                   await _loadTopics();
                   Navigator.pop(context);

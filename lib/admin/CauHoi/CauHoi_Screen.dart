@@ -15,17 +15,16 @@ class QuestionsScreen extends StatefulWidget {
 
 class _QuestionsScreenState extends State<QuestionsScreen> {
   List<Question> questions = [];
- List<Topic> chuDeList = []; 
+  List<Topic> chuDeList = []; 
   final QuestionService _questionService = QuestionService();
- 
-    final TopicService _topicService = TopicService();
+  final TopicService _topicService = TopicService();
   bool isLoading = true;
-
 
   @override
   void initState() {
     super.initState();
-    _loadQuestions(); // Gọi hàm tải câu hỏi
+    loadTopics(); // Tải danh sách chủ đề
+    _loadQuestions(); // Tải danh sách câu hỏi
   }
 
   // Tải câu hỏi từ Firestore
@@ -38,12 +37,13 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
           .showSnackBar(SnackBar(content: Text('Lỗi tải câu hỏi: $e')));
     }
   }
-    // Tải danh sách chủ đề từ Firestore
+
+  // Tải danh sách chủ đề từ Firestore
   Future<void> loadTopics() async {
     try {
       chuDeList = await _topicService.loadTopics();
       setState(() {
-        isLoading = false;
+        isLoading = false; // Đã tải xong danh sách chủ đề
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải chủ đề: $e')));
@@ -104,7 +104,7 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
               ),
             ),
             Text(
-              'Ngày tạo: ${question.createdDate.toDate()}',
+              'Ngày tạo: ${question.NgayTao}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white,
@@ -167,9 +167,10 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
           topics: chuDeList,
           onSave: (updatedQuestion) {
             setState(() {
+              // Cập nhật câu hỏi trong danh sách
               question.NoiDung_CauHoi = updatedQuestion.NoiDung_CauHoi;
               question.ChuDe_ID = updatedQuestion.ChuDe_ID;
-              // Cập nhật thêm nếu cần
+              _loadQuestions(); // Làm mới danh sách câu hỏi
             });
           },
         ),
@@ -193,23 +194,19 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await FirebaseFirestore.instance
-                      .collection('CauHoi')
-                      .doc(question.CauHoi_ID.toString())
-                      .delete();
+                  await _questionService.deleteQuestion(question.CauHoi_ID);
                   setState(() {
                     questions.remove(question);
                   });
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Đã xóa ${question.NoiDung_CauHoi}')),
+                    SnackBar(content: Text('Đã xóa ${question.NoiDung_CauHoi}')),
                   );
                 } catch (e) {
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Lỗi: $e')),
                   );
+                } finally {
+                  Navigator.pop(context);
                 }
               },
               child: Text('Xóa', style: TextStyle(color: Colors.white)),
@@ -222,19 +219,32 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
   }
 
   // Thêm câu hỏi mới
-  void _addItem(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddQuestionScreen(
-          topics: chuDeList,
-          onSave: (newQuestion) {
-            setState(() {
-              questions.add(newQuestion);
-            });
-          },
-        ),
+// Thêm câu hỏi mới
+void _addItem(BuildContext context) {
+  // Tạo một đối tượng câu hỏi mới với giá trị mặc định
+  Question newQuestion = Question(
+    CauHoi_ID: 0, 
+    NoiDung_CauHoi: '', 
+    ChuDe_ID: 0, 
+    NgayTao: DateTime.now(), 
+    TrangThai: 1,
+  );
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AddQuestionScreen(
+        topics: chuDeList,
+        onSave: (addedQuestion) {
+          // Thay vì gọi _loadQuestions(), thêm câu hỏi mới vào danh sách
+          setState(() {
+            questions.add(addedQuestion); // Thêm câu hỏi mới vào danh sách
+          });
+        },
+        question: newQuestion,
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

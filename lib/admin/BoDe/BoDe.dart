@@ -217,19 +217,19 @@ class _BoDeScreenState extends State<BoDeScreen> {
 
   // Thêm chi tiết bộ đề
   void _addChiTietItem(BuildContext context, BoDe boDe) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddChiTietBoDeScreen(
-          boDeId: boDe.boDeId,
-          onSave: (newChiTiet) {
-            setState(() {
-              boDe.chiTietBoDeList.add(newChiTiet);
-            });
-          },
-          maxSoLuongCau: boDe.soLuongCau,
-        ),
-      ),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => AddChiTietBoDeScreen(
+    //       boDeId: boDe.boDeId,
+    //       onSave: (newChiTiet) {
+    //         setState(() {
+    //           boDe.chiTietBoDeList.add(newChiTiet);
+    //         });
+    //       },
+    //       maxSoLuongCau: boDe.soLuongCau,
+    //     ),
+    //   ),
+    // );
   }
 }

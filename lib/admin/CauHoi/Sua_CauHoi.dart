@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:project_flutter/admin/CauHoi/CauHoi_Service.dart';
 import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/color/Color.dart';
+
 import 'package:project_flutter/model/question.dart';
 import 'package:project_flutter/model/topic.dart';
 
@@ -126,7 +127,7 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
                             CauHoi_ID: widget.question.CauHoi_ID,
                             ChuDe_ID: chuDeId!,
                             NoiDung_CauHoi: titleController.text,
-                            createdDate: widget.question.createdDate,
+                            NgayTao: widget.question.NgayTao,
                             TrangThai: widget.question.TrangThai,
                           );
 

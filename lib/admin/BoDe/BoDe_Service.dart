@@ -72,7 +72,36 @@ class BoDeService {
   }
 
   // Xóa bộ đề
-  Future<void> deleteBoDe(int boDeId) async {
-    await firestore.collection('BoDe').doc(boDeId.toString()).delete();
+Future<void> deleteBoDe(int boDeId) async {
+  // Tìm kiếm tài liệu bằng BoDe_ID
+  var querySnapshot = await firestore
+      .collection('BoDe')
+      .where('BoDe_ID', isEqualTo: boDeId)
+      .get();
+
+  if (querySnapshot.docs.isNotEmpty) {
+    // Xóa tài liệu
+    await querySnapshot.docs.first.reference.delete();
+
+    // Cập nhật lại danh sách câu hỏi hoặc bất kỳ hành động nào cần thiết sau khi xóa bộ đề
+    await updateQuestionsAfterBoDeDeletion(boDeId);
+  } else {
+    throw Exception('Không tìm thấy bộ đề với BoDe_ID: $boDeId');
+  }
+  
+}
+  Future<void> updateQuestionsAfterBoDeDeletion(int boDeId) async {
+    // Tải danh sách bộ đề hiện tại
+    var allBoDe = await firestore.collection('BoDe').get();
+
+    // Lọc ra các bộ đề không còn chủ đề hợp lệ
+    var invalidBoDe = allBoDe.docs.where((boDe) {
+      return boDe['ChuDe_ID'] == boDeId;
+    }).toList();
+
+    // Xóa các bộ đề không hợp lệ
+    for (var boDe in invalidBoDe) {
+      await boDe.reference.delete();
+    }
   }
 }

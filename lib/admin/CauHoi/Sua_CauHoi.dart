@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:project_flutter/admin/CauHoi/CauHoi_Service.dart';
+import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/color/Color.dart';
+
 import 'package:project_flutter/model/question.dart';
+import 'package:project_flutter/model/topic.dart';
 
 class EditQuestionScreen extends StatefulWidget {
   final Question question;
-  final List<String> topics;
   final Function(Question) onSave;
+  final List<Topic> topics;
 
-  EditQuestionScreen({required this.question, required this.topics, required this.onSave});
+  EditQuestionScreen({
+    required this.question,
+    required this.onSave,
+    required this.topics,
+  });
 
   @override
   _EditQuestionScreenState createState() => _EditQuestionScreenState();
@@ -15,17 +23,29 @@ class EditQuestionScreen extends StatefulWidget {
 
 class _EditQuestionScreenState extends State<EditQuestionScreen> {
   late TextEditingController titleController;
-  late List<String> answers;
-  late int correctAnswerIndex;
-  late String selectedTopic;
+  int? chuDeId;
+  List<Topic> chuDeList = [];
+  final QuestionService _questionService = QuestionService();
+  final TopicService _topicService = TopicService();
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.question.title);
-    answers = List.from(widget.question.answers);
-    correctAnswerIndex = widget.question.correctAnswerIndex;
-    selectedTopic = widget.question.topic;
+    titleController = TextEditingController(text: widget.question.NoiDung_CauHoi);
+    chuDeId = widget.question.ChuDe_ID;
+    loadTopics();
+  }
+
+  Future<void> loadTopics() async {
+    try {
+      chuDeList = await _topicService.loadTopics();
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải chủ đề: $e')));
+    }
   }
 
   InputDecoration _inputDecoration(String label, IconData icon) {
@@ -48,14 +68,6 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
     );
   }
 
-  Widget _buildTextFormField(TextEditingController controller, String label, IconData icon) {
-    return TextFormField(
-      controller: controller,
-      decoration: _inputDecoration(label, icon),
-      style: TextStyle(color: Colors.white),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,98 +77,88 @@ class _EditQuestionScreenState extends State<EditQuestionScreen> {
         backgroundColor: AppColors.btnColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Tiêu đề câu hỏi
-              _buildTextFormField(titleController, 'Tên Câu hỏi', Icons.question_answer),
+      body: isLoading 
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tiêu đề câu hỏi
+                    TextFormField(
+                      controller: titleController,
+                      decoration: _inputDecoration('Tên Câu hỏi', Icons.question_answer),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    SizedBox(height: 16),
 
-              SizedBox(height: 16),
+                    // Dropdown chọn Đề tài
+                    DropdownButtonFormField<int>(
+                      dropdownColor: AppColors.btnColor,
+                      value: chuDeId,
+                      decoration: _inputDecoration('Chủ đề', Icons.category),
+                      style: TextStyle(color: Colors.white),
+                      onChanged: (value) {
+                        setState(() {
+                          chuDeId = value;
+                        });
+                      },
+                      items: chuDeList.map((topic) {
+                        return DropdownMenuItem<int>(
+                          value: topic.ChuDe_ID,
+                          child: Text(topic.TenChuDe, style: TextStyle(color: Colors.white)),
+                        );
+                      }).toList(),
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Vui lòng chọn chủ đề';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
 
-              // Dropdown chọn Đề tài
-              DropdownButtonFormField<String>(
-                dropdownColor: AppColors.btnColor,
-                value: selectedTopic,
-                onChanged: (newTopic) {
-                  setState(() {
-                    selectedTopic = newTopic!;
-                  });
-                },
-                items: widget.topics
-                    .map((topic) => DropdownMenuItem<String>(
-                          value: topic,
-                          child: Text(topic, style: TextStyle(color: Colors.white)),
-                        ))
-                    .toList(),
-                isExpanded: true,
-                icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                decoration: _inputDecoration('Chọn Đề tài', Icons.category),
-              ),
-              SizedBox(height: 16),
+                    // Nút "Lưu" để lưu câu hỏi đã chỉnh sửa
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (titleController.text.isNotEmpty && chuDeId != null) {
+                          Question updatedQuestion = Question(
+                            CauHoi_ID: widget.question.CauHoi_ID,
+                            ChuDe_ID: chuDeId!,
+                            NoiDung_CauHoi: titleController.text,
+                            NgayTao: widget.question.NgayTao,
+                            TrangThai: widget.question.TrangThai,
+                          );
 
-              // Danh sách đáp án
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: answers
-                    .map((answer) => ListTile(
-                          contentPadding: EdgeInsets.symmetric(vertical: 4),
-                          title: Text(
-                            answer,
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
-                          leading: Radio<int>(
-                            value: answers.indexOf(answer),
-                            groupValue: correctAnswerIndex,
-                            onChanged: (int? value) {
-                              setState(() {
-                                correctAnswerIndex = value!;
-                              });
-                            },
-                          ),
-                        ))
-                    .toList(),
-              ),
-              SizedBox(height: 16),
-
-              // Nút "Lưu" để lưu câu hỏi đã chỉnh sửa
-              ElevatedButton(
-                onPressed: () {
-                  if (titleController.text.isNotEmpty && answers.isNotEmpty) {
-                    widget.onSave(Question(
-                      title: titleController.text,
-                      topic: selectedTopic,
-                      answers: answers,
-                      correctAnswerIndex: correctAnswerIndex,
-                    ));
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Câu hỏi đã được chỉnh sửa')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Vui lòng nhập đủ thông tin')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.btnColor,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: Text(
-                  'Lưu',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                          await _questionService.updateQuestion(updatedQuestion);
+                          widget.onSave(updatedQuestion);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Câu hỏi đã được chỉnh sửa')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Vui lòng nhập đủ thông tin')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.btnColor,
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        'Lưu',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

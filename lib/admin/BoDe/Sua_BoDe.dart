@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:project_flutter/admin/BoDe/BoDe_Service.dart';
+import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/color/Color.dart';
-
 import 'package:project_flutter/model/bode.dart';
+import 'package:project_flutter/model/topic.dart';
 
 class EditBoDeScreen extends StatefulWidget {
   final BoDe boDe;
-  final List<String> chuDeList;
+  final List<Topic> chuDeList;
   final Function(BoDe) onSave;
 
   EditBoDeScreen({
@@ -23,14 +25,24 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
   int? chuDeId;
   int soLuongCau = 0;
   int trangThai = 1;
+  List<Topic> chuDeList = [];
+  bool isLoading = true;
+  final BoDeService boDeService = BoDeService();
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo các giá trị từ boDe hiện tại
-    chuDeId = widget.boDe.chuDeId;
-    soLuongCau = widget.boDe.soLuongCau;
-    trangThai = widget.boDe.trangThai;
+    chuDeId = widget.boDe.chuDeId; // Khởi tạo giá trị cho chuDeId
+    soLuongCau = widget.boDe.soLuongCau; // Khởi tạo giá trị cho soLuongCau
+    loadTopics();
+  }
+
+  Future<void> loadTopics() async {
+    TopicService topicService = TopicService();
+    chuDeList = await topicService.loadTopics();
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -38,8 +50,8 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text('Chỉnh sửa Bộ đề',style: TextStyle(color: Colors.white),),
-           iconTheme: IconThemeData(color: Colors.white), 
+        title: Text('Chỉnh sửa Bộ đề', style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: AppColors.btnColor,
       ),
       body: Padding(
@@ -50,8 +62,8 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
             children: [
               // Dropdown cho chủ đề
               DropdownButtonFormField<int>(
+                dropdownColor: AppColors.btnColor,
                 value: chuDeId,
-                                style: TextStyle(color: Colors.white), 
                 decoration: InputDecoration(
                   labelText: 'Chủ đề',
                   enabledBorder: OutlineInputBorder(
@@ -61,18 +73,19 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                     borderSide: BorderSide(color: AppColors.btnColor),
                   ),
                 ),
+                style: TextStyle(color: Colors.white),
                 onChanged: (value) {
                   setState(() {
                     chuDeId = value;
+                    print("Chủ đề ID đã thay đổi: $chuDeId"); // Kiểm tra giá trị mới
                   });
                 },
-                items: List.generate(
-                  widget.chuDeList.length,
-                  (index) => DropdownMenuItem(
-                    value: index + 1, // Giả sử chuDeId bắt đầu từ 1
-                    child: Text(widget.chuDeList[index]),
-                  ),
-                ),
+                items: chuDeList.map((topic) {
+                  return DropdownMenuItem<int>(
+                    value: topic.ChuDe_ID,
+                    child: Text(topic.TenChuDe),
+                  );
+                }).toList(),
                 validator: (value) {
                   if (value == null) {
                     return 'Vui lòng chọn chủ đề';
@@ -80,7 +93,6 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                   return null;
                 },
               ),
-              
               // TextField cho số lượng câu
               TextFormField(
                 initialValue: soLuongCau.toString(),
@@ -93,7 +105,7 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                     borderSide: BorderSide(color: Colors.white),
                   ),
                 ),
-                                style: TextStyle(color: Colors.white), 
+                style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   setState(() {
@@ -107,27 +119,32 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                   return null;
                 },
               ),
-
               SizedBox(height: 20),
-
-              // Nút Lưu
               ElevatedButton(
-                
-                onPressed: () {
-                  
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    // Kiểm tra xem chuDeId có thay đổi hay không
+                    if (chuDeId != widget.boDe.chuDeId) {
+                      print("ChuDeId đã thay đổi từ ${widget.boDe.chuDeId} thành $chuDeId");
+                    }
+
                     // Cập nhật lại thông tin bộ đề
-                    widget.onSave(BoDe(
+                    BoDe updatedBoDe = BoDe(
                       boDeId: widget.boDe.boDeId, // Giữ nguyên ID bộ đề
                       chuDeId: chuDeId!,
                       soLuongCau: soLuongCau,
-                      createAt: widget.boDe.createAt, // Giữ nguyên thời gian tạo
-                      updateAt: DateTime.now(), // Cập nhật thời gian sửa đổi
+                      createAt: widget.boDe.createAt,
+                      updateAt: DateTime.now(),
                       trangThai: trangThai,
-                    ));
-                    Navigator.pop(context);
+                    );
+
+                    // Gọi phương thức cập nhật
+                    await boDeService.updateBoDe(updatedBoDe);
+                    widget.onSave(updatedBoDe); // Gọi callback để cập nhật UI
+                     Navigator.pop(context, updatedBoDe);
                   }
                 },
+                
                 child: Text('Lưu'),
               ),
             ],

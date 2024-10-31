@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/question.dart';
+import 'package:project_flutter/model/topic.dart';
 
 class AddQuestionScreen extends StatefulWidget {
-  final List<String> topics;
+  final List<Topic> topics;
   final Function(Question) onSave;
 
   AddQuestionScreen({required this.topics, required this.onSave});
@@ -14,10 +16,7 @@ class AddQuestionScreen extends StatefulWidget {
 
 class _AddQuestionScreenState extends State<AddQuestionScreen> {
   final titleController = TextEditingController();
-  final answerController = TextEditingController();
-  final List<String> answers = [];
   String selectedTopic = 'Đề tài 1';
-  int correctAnswerIndex = 0;
 
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
@@ -56,7 +55,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Tiêu đề câu hỏi
-              _buildTextFormField(titleController, 'Tên Câu hỏi', Icons.question_answer),
+              _buildTextFormField(
+                  titleController, 'Tên Câu hỏi', Icons.question_answer),
 
               SizedBox(height: 16),
 
@@ -64,11 +64,13 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
               DropdownButtonFormField<String>(
                 dropdownColor: AppColors.btnColor,
                 value: selectedTopic,
-                onChanged: (newTopic) => setState(() => selectedTopic = newTopic!),
+                onChanged: (newTopic) =>
+                    setState(() => selectedTopic = newTopic!),
                 items: widget.topics
                     .map((topic) => DropdownMenuItem<String>(
-                          value: topic,
-                          child: Text(topic, style: TextStyle(color: Colors.white)),
+                          value: topic.ChuDe_ID.toString(),
+                          child: Text(topic.TenChuDe,
+                              style: TextStyle(color: Colors.white)),
                         ))
                     .toList(),
                 isExpanded: true,
@@ -77,65 +79,41 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
               ),
               SizedBox(height: 16),
 
-              // Thêm đáp án
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextFormField(answerController, 'Đáp án', Icons.edit),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.add_circle, color: Colors.white),
-                    onPressed: () {
-                      if (answerController.text.isNotEmpty) {
-                        setState(() {
-                          answers.add(answerController.text);
-                          answerController.clear();
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Danh sách đáp án
-              Column(
-                children: answers
-                    .map((answer) => ListTile(
-                          contentPadding: EdgeInsets.symmetric(vertical: 4),
-                          title: Text(answer, style: TextStyle(color: Colors.white)),
-                          leading: Radio<int>(
-                            value: answers.indexOf(answer),
-                            groupValue: correctAnswerIndex,
-                            onChanged: (int? value) => setState(() => correctAnswerIndex = value!),
-                          ),
-                        ))
-                    .toList(),
-              ),
-              SizedBox(height: 16),
-
               // Nút thêm câu hỏi
               ElevatedButton(
                 onPressed: () {
-                  if (titleController.text.isNotEmpty && answers.isNotEmpty) {
-                    widget.onSave(Question(
-                      title: titleController.text,
-                      topic: selectedTopic,
-                      answers: answers,
-                      correctAnswerIndex: correctAnswerIndex,
-                    ));
+                  if (titleController.text.isNotEmpty) {
+                    // Tạo một ID cho câu hỏi mới (có thể tự động hoặc khác)
+                    int newQuestionId = 0; // Hoặc một giá trị hợp lệ khác
+
+                    // Khởi tạo một Question mới
+                    Question newQuestion = Question(
+                      CauHoi_ID: newQuestionId, // Cung cấp ID câu hỏi
+                      NoiDung_CauHoi: titleController.text, // Nội dung câu hỏi
+                      ChuDe_ID:
+                          int.parse(selectedTopic), // Chuyển đổi chủ đề về int
+                      createdDate: Timestamp.now(), // Ngày tạo câu hỏi
+                      TrangThai: 1, // Trạng thái câu hỏi
+      
+                    );
+
+                    widget.onSave(newQuestion);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Câu hỏi đã được thêm')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Câu hỏi đã được thêm')));
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Vui lòng nhập đủ thông tin')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Vui lòng nhập đủ thông tin')));
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.btnColor,
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
-                child: Text('Thêm Câu hỏi', style: TextStyle(fontSize: 18, color: Colors.white)),
+                child: Text('Thêm Câu hỏi',
+                    style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
@@ -144,7 +122,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
     );
   }
 
-  Widget _buildTextFormField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextFormField(
+      TextEditingController controller, String label, IconData icon) {
     return TextFormField(
       controller: controller,
       decoration: _inputDecoration(label, icon),

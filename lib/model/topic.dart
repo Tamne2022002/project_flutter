@@ -1,6 +1,9 @@
 class Topic {
-  String title;
-  int questionCount;
+  String TenChuDe;
+  int SLCauHoi;
+  int ChuDe_ID;
 
-  Topic({required this.title, required this.questionCount});
+  
+
+  Topic({required this.TenChuDe, required this.SLCauHoi,required this.ChuDe_ID});
 }

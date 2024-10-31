@@ -8,6 +8,7 @@ class BoDe {
   DateTime createAt;
   DateTime updateAt;
   int trangThai;
+  String tenChuDe;
   
   // Danh sách các chi tiết bộ đề
   List<ChiTietBoDe> chiTietBoDeList;
@@ -19,6 +20,7 @@ class BoDe {
     required this.createAt,
     required this.updateAt,
     required this.trangThai,
+      this.tenChuDe = "",
     this.chiTietBoDeList = const [], // Mặc định là danh sách rỗng
   });
 }

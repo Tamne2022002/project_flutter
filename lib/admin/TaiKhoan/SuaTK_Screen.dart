@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/account.dart';
-
+import 'package:project_flutter/authen/service.dart'; // Nhập AuthService để sử dụng hàm cập nhật
 
 class EditAccountScreen extends StatefulWidget {
   final Account account;
@@ -17,11 +17,10 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
-  late TextEditingController passwordController;
   late TextEditingController roleController;
-  late TextEditingController xpController;
 
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService(); // Khởi tạo AuthService
 
   @override
   void initState() {
@@ -29,28 +28,8 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
     nameController = TextEditingController(text: widget.account.name);
     emailController = TextEditingController(text: widget.account.email);
     phoneController = TextEditingController(text: widget.account.phone);
-    passwordController = TextEditingController(text: widget.account.password);
     roleController =
         TextEditingController(text: widget.account.role.toString());
-    xpController = TextEditingController(text: widget.account.xp.toString());
-  }
-
-  // Kiểm tra định dạng email
-  bool _isValidEmail(String email) {
-    final emailRegex =
-        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-    return emailRegex.hasMatch(email);
-  }
-
-  // Kiểm tra định dạng số điện thoại (10-11 chữ số)
-  bool _isValidPhone(String phone) {
-    final phoneRegex = RegExp(r'^\d{10,11}$');
-    return phoneRegex.hasMatch(phone);
-  }
-
-  // Kiểm tra nhập số cho Role và XP
-  bool _isValidNumber(String value) {
-    return int.tryParse(value) != null;
   }
 
   @override
@@ -58,7 +37,8 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text('Chỉnh sửa Tài khoản', style: TextStyle(fontSize: 22,color: Colors.white)),
+        title: Text('Chỉnh sửa Tài khoản',
+            style: TextStyle(fontSize: 22, color: Colors.white)),
         backgroundColor: AppColors.btnColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -80,13 +60,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                     phoneController, 'Số điện thoại', Icons.phone,
                     keyboardType: TextInputType.phone),
                 SizedBox(height: 16),
-                _buildTextFormField(passwordController, 'Mật khẩu', Icons.lock,
-                    obscureText: true),
-                SizedBox(height: 16),
                 _buildTextFormField(roleController, 'Quyền hạn', Icons.security,
-                    keyboardType: TextInputType.number),
-                SizedBox(height: 16),
-                _buildTextFormField(xpController, 'Điểm XP', Icons.star,
                     keyboardType: TextInputType.number),
                 SizedBox(height: 32),
                 ElevatedButton(
@@ -96,20 +70,38 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      widget.onSave(Account(
-                        name: nameController.text,
-                        email: emailController.text,
-                        phone: phoneController.text,
-                        password: passwordController.text,
-                        role: int.tryParse(roleController.text) ?? 0,
-                        xp: int.tryParse(xpController.text) ?? 0,
-                      ));
-                      Navigator.pop(context);
+                      print(
+                          "Updating account: id=${widget.account.id}, name=${nameController.text}, email=${emailController.text}, phone=${phoneController.text}, role=${roleController.text}"); // In giá trị ra
+                      bool success = await _authService.updateAccount(
+                        widget.account.id,
+                        nameController.text,
+                        emailController.text,
+                        phoneController.text,
+                        int.tryParse(roleController.text) ?? 0,
+                      );
+                      if (success) {
+                        // Gọi callback onSave với thông tin đã cập nhật
+                        widget.onSave(Account(
+                          id: widget.account.id, // Giữ ID cũ
+                          name: nameController.text,
+                          email: emailController.text,
+                          phone: phoneController.text,
+                          role: int.tryParse(roleController.text) ?? 0,
+                          xp: widget.account.xp, // Giữ giá trị XP cũ
+                        ));
+                        Navigator.pop(context);
+                      } else {
+                        // Xử lý lỗi nếu không cập nhật thành công
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Cập nhật thất bại!')),
+                        );
+                      }
                     }
                   },
-                  child: Text('Lưu', style: TextStyle(fontSize: 18,color: Colors.white)),
+                  child: Text('Lưu',
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ],
             ),
@@ -127,18 +119,15 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: TextStyle(color: Colors.white), // Màu chữ
+      style: TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white), // Màu chữ label
-        prefixIcon: Icon(icon, color: Colors.white), // Màu icon
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white), // Viền trắng
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: Colors.white), // Viền trắng khi có focus
-        ),
+        labelStyle: TextStyle(color: Colors.white),
+        prefixIcon: Icon(icon, color: Colors.white),
+        enabledBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+        focusedBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {

@@ -125,7 +125,7 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     // Gán ID mới cho bộ đề
-                    int newBoDeId = boDeList.isNotEmpty ? boDeList.length + 1 : 1;
+                    int newBoDeId = await boDeService.getMaxBoDeId()+1;
 
                     BoDe newBoDe = BoDe(
                       boDeId: newBoDeId,

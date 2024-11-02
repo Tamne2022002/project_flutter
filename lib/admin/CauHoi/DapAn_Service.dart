@@ -46,6 +46,18 @@ class DapAnService {
     });
   }
 
+  // Xóa tất cả đáp án theo ID câu hỏi
+  Future<void> deleteAnswersByQuestionId(int cauHoiId) async {
+    var querySnapshot = await _firestore
+        .collection('DapAn')
+        .where('CauHoi_ID', isEqualTo: cauHoiId)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
   // Xóa một đáp án
   Future<void> deleteAnswer(String answerId) async {
     await _firestore.collection('DapAn').doc(answerId).delete();

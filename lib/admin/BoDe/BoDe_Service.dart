@@ -104,4 +104,18 @@ Future<void> deleteBoDe(int boDeId) async {
       await boDe.reference.delete();
     }
   }
+    // Hàm để lấy ID lớn nhất của bộ đề
+  Future<int> getMaxBoDeId() async {
+    final snapshot = await firestore.collection('BoDe').get();
+    int maxId = 0;
+
+    for (var doc in snapshot.docs) {
+      int currentId = doc['BoDe_ID'] ?? 0; // Lấy giá trị BoDe_ID
+      if (currentId > maxId) {
+        maxId = currentId; // Cập nhật maxId nếu currentId lớn hơn
+      }
+    }
+
+    return maxId; // Trả về ID lớn nhất
+  }
 }

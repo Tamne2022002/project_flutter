@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/layout/button_game.dart';
+import 'package:project_flutter/layout/quizz_screen.dart';
 import 'dart:math' as math;
 
 import '../color/Color.dart';
@@ -20,7 +21,8 @@ class PracticeScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: Text('LUYỆN TẬP', style: TextStyle(fontSize: 20, color: Colors.white)),
+        title: Text('LUYỆN TẬP',
+            style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
       ),
       body: ListView.builder(
@@ -35,19 +37,51 @@ class PracticeScreen extends StatelessWidget {
                   flex: 1,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+                      backgroundColor:
+                          Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+                              .withOpacity(1.0),
                       padding: EdgeInsets.symmetric(vertical: 20),
-                      minimumSize: const Size(100,200),
+                      minimumSize: const Size(100, 200),
                       shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  QuizScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            var offsetAnimation = animation.drive(tween);
+
+                            return SlideTransition(
+                              position: offsetAnimation,
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                    },
                     child: const Column(
                       children: [
-                        Text('Chủ đề', style: TextStyle(color: Colors.white, fontSize: 14)),
+                        Text('Chủ đề',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
                         SizedBox(height: 4),
-                        Text('Toán', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('Toán',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -60,26 +94,50 @@ class PracticeScreen extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.btnColor,
                           padding: EdgeInsets.symmetric(vertical: 20),
-                          minimumSize: const Size(200,100),
+                          minimumSize: const Size(200, 100),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                         onPressed: () {},
-                        child: Text('Xếp hạng', style: TextStyle(color: Colors.white, fontSize: 14)),
+                        child: Text('Xếp hạng',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
                       ),
                       SizedBox(height: 10),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.btnColor,
                           padding: const EdgeInsets.symmetric(vertical: 20),
-                          minimumSize: const Size(200,100),
+                          minimumSize: const Size(200, 100),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        onPressed: () {},
-                        child: Text('Chơi', style: TextStyle(color: Colors.white, fontSize: 14)),
+                        onPressed: () {
+                          Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) => QuizScreen(),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0);
+                      const end = Offset.zero;
+                      const curve = Curves.ease;
+
+                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
+
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+                        },
+                        child: Text('Chơi',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
                       ),
                     ],
                   ),

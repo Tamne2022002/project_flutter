@@ -5,20 +5,24 @@ import 'package:project_flutter/layout/home_screen.dart';
 import 'package:project_flutter/layout/practice_screen.dart';
 import 'package:project_flutter/authen/login_screen.dart';
 
-Future<void>  main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-);
-  runApp(MyApp());
+// Future<void>  main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp();
+//   await Firebase.initializeApp(
+//     options: DefaultFirebaseOptions.currentPlatform,
+// );
+//   runApp(MyApp());
+// }
+
+void main() {
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: LoginScreen(),
+      home: HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

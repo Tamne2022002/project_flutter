@@ -57,10 +57,40 @@ class TopicService {
 
       // Cập nhật lại danh sách bộ đề sau khi xóa chủ đề
       await updateBoDeAfterTopicDeletion(chuDeID);
+      await updateCauHoiDapAnAfterTopicDeletion(chuDeID);
     } else {
       throw Exception('Không tìm thấy chủ đề với ChuDe_ID: $chuDeID');
     }
   }
+  Future<void> updateCauHoiDapAnAfterTopicDeletion(int chuDeID) async {
+  // Tải danh sách câu hỏi hiện tại
+  var allQuestions = await firestore.collection('CauHoi').get();
+
+  // Lọc ra các câu hỏi không còn chủ đề hợp lệ
+  var invalidQuestions = allQuestions.docs.where((question) {
+    return question['ChuDe_ID'] == chuDeID;
+  }).toList();
+
+  // Xóa các câu hỏi không hợp lệ
+  for (var question in invalidQuestions) {
+    await question.reference.delete();
+  }
+
+  // Tải danh sách đáp án hiện tại
+  var allAnswers = await firestore.collection('DapAn').get();
+
+  // Lọc ra các đáp án không còn câu hỏi hợp lệ
+  var invalidAnswers = allAnswers.docs.where((answer) {
+    // Kiểm tra xem đáp án có thuộc về một câu hỏi đã bị xóa hay không
+    return !invalidQuestions.any((q) => q.id == answer['CauHoi_ID']);
+  }).toList();
+
+  // Xóa các đáp án không hợp lệ
+  for (var answer in invalidAnswers) {
+    await answer.reference.delete();
+  }
+}
+
 
 // Hàm để cập nhật danh sách bộ đề
   Future<void> updateBoDeAfterTopicDeletion(int chuDeID) async {
@@ -78,6 +108,8 @@ class TopicService {
     }
   }
 
+  
+
   // Lấy tên chủ đề theo ChuDe_ID
   Future<String> getTenChuDe(int chuDeId) async {
     var querySnapshot = await firestore
@@ -90,5 +122,19 @@ class TopicService {
     } else {
       throw Exception('Không tìm thấy chủ đề với ID: $chuDeId');
     }
+  }
+  // Hàm để lấy ID lớn nhất của chủ đề
+  Future<int> getMaxTopicId() async {
+    final snapshot = await firestore.collection('ChuDe').get();
+    int maxId = 0;
+
+    for (var doc in snapshot.docs) {
+      int currentId = doc['ChuDe_ID'] ?? 0; // Lấy giá trị ChuDe_ID
+      if (currentId > maxId) {
+        maxId = currentId; // Cập nhật maxId nếu currentId lớn hơn
+      }
+    }
+
+    return maxId; // Trả về ID lớn nhất
   }
 }

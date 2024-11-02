@@ -5,13 +5,15 @@ class Account {
   String password;
   int role; 
   int xp;
+  int id;
 
   Account({
     required this.name,
     required this.email,
     required this.phone,
-    required this.password,
+    this.password = "",
     required this.role,  
     required this.xp,
+    this.id = 1,
   });
 }

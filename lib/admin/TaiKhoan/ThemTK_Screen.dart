@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
-
 import 'package:project_flutter/model/account.dart';
+import 'package:project_flutter/authen/service.dart'; // Import AuthService
 
 class AddAccountScreen extends StatefulWidget {
-  final Function(Account) onSave;
-
-  AddAccountScreen({required this.onSave});
-
   @override
   _AddAccountScreenState createState() => _AddAccountScreenState();
 }
@@ -18,9 +14,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   late TextEditingController phoneController;
   late TextEditingController passwordController;
   late TextEditingController roleController;
-  late TextEditingController xpController;
 
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService(); // Khởi tạo AuthService
 
   @override
   void initState() {
@@ -30,25 +26,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     phoneController = TextEditingController();
     passwordController = TextEditingController();
     roleController = TextEditingController();
-    xpController = TextEditingController();
-  }
-
-  // Kiểm tra định dạng email
-  bool _isValidEmail(String email) {
-    final emailRegex =
-        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-    return emailRegex.hasMatch(email);
-  }
-
-  // Kiểm tra định dạng số điện thoại (10-11 chữ số)
-  bool _isValidPhone(String phone) {
-    final phoneRegex = RegExp(r'^\d{10,11}$');
-    return phoneRegex.hasMatch(phone);
-  }
-
-  // Kiểm tra nhập số cho Role và XP
-  bool _isValidNumber(String value) {
-    return int.tryParse(value) != null;
   }
 
   @override
@@ -56,7 +33,8 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text('Chỉnh sửa Tài khoản', style: TextStyle(fontSize: 22,color: Colors.white)),
+        title: Text('Thêm Tài khoản',
+            style: TextStyle(fontSize: 22, color: Colors.white)),
         backgroundColor: AppColors.btnColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -83,9 +61,6 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 SizedBox(height: 16),
                 _buildTextFormField(roleController, 'Quyền hạn', Icons.security,
                     keyboardType: TextInputType.number),
-                SizedBox(height: 16),
-                _buildTextFormField(xpController, 'Điểm XP', Icons.star,
-                    keyboardType: TextInputType.number),
                 SizedBox(height: 32),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -94,20 +69,41 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      widget.onSave(Account(
-                        name: nameController.text,
-                        email: emailController.text,
-                        phone: phoneController.text,
-                        password: passwordController.text,
-                        role: int.tryParse(roleController.text) ?? 0,
-                        xp: int.tryParse(xpController.text) ?? 0,
-                      ));
-                      Navigator.pop(context);
+                      int phanQuyenID = int.tryParse(roleController.text) ?? 0;
+
+                      // Gọi hàm createAdminUser
+                      final user = await _authService.createAdminUser(
+                        nameController.text,
+                        emailController.text,
+                        phoneController.text,
+                        passwordController.text,
+                        phanQuyenID,
+                      );
+
+                      if (user != null) {
+                        // Trả về Account mới được tạo
+                        Account newAccount = Account(
+                        
+                          name: nameController.text,
+                          email: emailController.text,
+                          phone: phoneController.text,
+                          password: passwordController.text,
+                          role: phanQuyenID,
+                          xp: 0, // XP không cần thiết
+                        );
+
+                        Navigator.pop(context, newAccount); // Trả về Account
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Tạo tài khoản thất bại!')),
+                        );
+                      }
                     }
                   },
-                  child: Text('Lưu', style: TextStyle(fontSize: 18,color: Colors.white)),
+                  child: Text('Lưu',
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ],
             ),
@@ -117,31 +113,31 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     );
   }
 
-  // Widget tái sử dụng cho các trường nhập liệu
-  Widget _buildTextFormField(TextEditingController controller, String label, IconData icon, {bool obscureText = false, TextInputType? keyboardType}) {
-  return TextFormField(
-    controller: controller,
-    obscureText: obscureText,
-    keyboardType: keyboardType,
-    style: TextStyle(color: Colors.white), // Màu chữ
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: Colors.white), // Màu chữ label
-      prefixIcon: Icon(icon, color: Colors.white), // Màu icon
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.white), // Viền trắng
+  Widget _buildTextFormField(
+      TextEditingController controller, String label, IconData icon,
+      {bool obscureText = false, TextInputType? keyboardType}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        prefixIcon: Icon(icon, color: Colors.white),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.white), // Viền trắng khi có focus
-      ),
-    ),
-    validator: (value) {
-      if (value == null || value.isEmpty) {
-        return 'Vui lòng nhập $label';
-      }
-      return null;
-    },
-  );
-}
-
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Vui lòng nhập $label';
+        }
+        return null;
+      },
+    );
+  }
 }

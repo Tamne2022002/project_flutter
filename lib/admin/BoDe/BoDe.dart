@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/admin/BoDe/BoDe_Service.dart';
+import 'package:project_flutter/admin/BoDe/ChiTietBoDe.dart';
 import 'package:project_flutter/admin/BoDe/Sua_BoDe.dart';
 import 'package:project_flutter/admin/BoDe/Them_BoDe_screen.dart';
+import 'package:project_flutter/admin/BoDe/Them_ChiTietBoDe.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/bode.dart';
+import 'package:project_flutter/model/chitietbode.dart';
 import 'package:project_flutter/model/topic.dart';
 import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 
@@ -55,12 +58,22 @@ class _BoDeScreenState extends State<BoDeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
-            ...boDeList.map((boDe) => _buildListItem(context, boDe)).toList(),
-            _buildAddButton(context),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    ...boDeList.map((boDe) => _buildListItem(context, boDe)).toList(),
+                   
+                  ],
+                ),
+              ),
+            ),
+                     _buildAddButton(context),
           ],
         ),
+
       ),
     );
   }
@@ -91,16 +104,18 @@ class _BoDeScreenState extends State<BoDeScreen> {
     );
   }
 
-  Row _buildActionButtons(BuildContext context, BoDe boDe) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildIconButton(Icons.edit, Colors.white, () => _editItem(context, boDe)),
-        _buildIconButton(Icons.add_circle_outline, Colors.white, () => _addChiTietItem(context, boDe)),
-        _buildIconButton(Icons.delete, Colors.white, () => _deleteItem(context, boDe)),
-      ],
-    );
-  }
+Row _buildActionButtons(BuildContext context, BoDe boDe) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _buildIconButton(Icons.edit, Colors.white, () => _editItem(context, boDe)),
+      _buildIconButton(Icons.add_circle_outline, Colors.white, () => _addChiTietItem(context, boDe)),
+      _buildIconButton(Icons.delete, Colors.white, () => _deleteItem(context, boDe)),
+      _buildIconButton(Icons.remove_red_eye, Colors.white, () => _viewChiTietBoDe(context, boDe)), // Nút icon mắt
+    ],
+  );
+}
+
 
   IconButton _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
     return IconButton(icon: Icon(icon, color: color), onPressed: onPressed);
@@ -186,7 +201,36 @@ class _BoDeScreenState extends State<BoDeScreen> {
     );
   }
 
-  void _addChiTietItem(BuildContext context, BoDe boDe) {
-    // Thêm logic cho việc thêm chi tiết bộ đề ở đây
-  }
+void _addChiTietItem(BuildContext context, BoDe boDe) {
+  // Giả sử bạn đã có một hàm để lấy chủ đề ID từ BoDe
+  int chuDeId = boDe.chuDeId; // Thay thế bằng cách lấy ID từ boDe
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AddChiTietBoDeScreen(
+        boDeId: boDe.boDeId, // ID bộ đề
+        maxSoLuongCau: boDe.soLuongCau, // Số lượng câu hỏi tối đa (có thể thay đổi tùy nhu cầu)
+        chuDeId: chuDeId, // ID của chủ đề
+        onSave: (ChiTietBoDe chiTietBoDe) {
+          // Logic để cập nhật danh sách chi tiết bộ đề sau khi lưu
+          setState(() {
+
+          });
+        },
+      ),
+    ),
+  );
+}
+
+void _viewChiTietBoDe(BuildContext context, BoDe boDe) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ChiTietBoDeScreen(boDeId: boDe.boDeId), // Truyền boDeId
+    ),
+  );
+}
+
+
 }

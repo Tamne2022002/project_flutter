@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:project_flutter/admin/BoDe/BoDe_Service.dart';
 import 'package:project_flutter/admin/BoDe/Sua_BoDe.dart';
 import 'package:project_flutter/admin/BoDe/Them_BoDe_screen.dart';
-import 'package:project_flutter/admin/BoDe/Them_ChiTietBoDe.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/bode.dart';
+import 'package:project_flutter/model/topic.dart';
+import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 
 class BoDeScreen extends StatefulWidget {
   @override
@@ -11,18 +13,43 @@ class BoDeScreen extends StatefulWidget {
 }
 
 class _BoDeScreenState extends State<BoDeScreen> {
-  List<BoDe> boDeList = []; // Danh sách các bộ đề
-  List<String> chuDeList = ['Đề tài 1', 'Đề tài 2', 'Đề tài 3'];
+  List<BoDe> boDeList = [];
+  List<Topic> chuDeList = [];
+  final BoDeService boDeService = BoDeService();
+  final TopicService topicService = TopicService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBoDes();
+    _loadChuDes();
+  }
+
+  Future<void> _loadBoDes() async {
+    try {
+      List<BoDe> loadedBoDes = await boDeService.loadBoDes();
+      setState(() {
+        boDeList = loadedBoDes;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải dữ liệu: $e')));
+    }
+  }
+
+  Future<void> _loadChuDes() async {
+    try {
+      chuDeList = await topicService.loadTopics();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải chủ đề: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text(
-          "Danh sách Bộ đề",
-          style: TextStyle(fontSize: 22,color: Colors.white),
-        ),
+        title: Text("Danh sách Bộ đề", style: TextStyle(fontSize: 22, color: Colors.white)),
         backgroundColor: AppColors.btnColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -30,7 +57,7 @@ class _BoDeScreenState extends State<BoDeScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            for (var boDe in boDeList) _buildListItem(context, boDe),
+            ...boDeList.map((boDe) => _buildListItem(context, boDe)).toList(),
             _buildAddButton(context),
           ],
         ),
@@ -38,77 +65,47 @@ class _BoDeScreenState extends State<BoDeScreen> {
     );
   }
 
-  // Hiển thị bộ đề trong danh sách
-  // Hiển thị bộ đề trong danh sách
   Widget _buildListItem(BuildContext context, BoDe boDe) {
     return Card(
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: AppColors.btnColor,
       margin: const EdgeInsets.symmetric(vertical: 10),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Bộ đề ${boDe.boDeId}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Đề tài: ${chuDeList[boDe.chuDeId - 1]}', // Giả sử chuDeId bắt đầu từ 1
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Số lượng câu: ${boDe.soLuongCau}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Trạng thái: ${boDe.trangThai == 1 ? 'Hoạt động' : 'Không hoạt động'}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Nút chỉnh sửa bộ đề
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
-              onPressed: () => _editItem(context, boDe),
-            ),
-            // Nút thêm chi tiết bộ đề
-            IconButton(
-              icon: Icon(Icons.add_circle_outline, color: Colors.white),
-              onPressed: () => _addChiTietItem(context, boDe),
-            ),
-            // Nút xóa bộ đề
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: () => _deleteItem(context, boDe),
-            ),
-          ],
-        ),
+        title: _buildBoDeInfo(boDe),
+        trailing: _buildActionButtons(context, boDe),
       ),
     );
   }
 
-  // Nút thêm bộ đề
+  Column _buildBoDeInfo(BoDe boDe) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Bộ đề ${boDe.boDeId}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        Text('Đề tài: ${boDe.tenChuDe}', style: TextStyle(fontSize: 16, color: Colors.white)),
+        Text('Số lượng câu: ${boDe.soLuongCau}', style: TextStyle(fontSize: 16, color: Colors.white)),
+        Text('Trạng thái: ${boDe.trangThai == 1 ? 'Hoạt động' : 'Không hoạt động'}', style: TextStyle(fontSize: 16, color: Colors.white)),
+      ],
+    );
+  }
+
+  Row _buildActionButtons(BuildContext context, BoDe boDe) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildIconButton(Icons.edit, Colors.white, () => _editItem(context, boDe)),
+        _buildIconButton(Icons.add_circle_outline, Colors.white, () => _addChiTietItem(context, boDe)),
+        _buildIconButton(Icons.delete, Colors.white, () => _deleteItem(context, boDe)),
+      ],
+    );
+  }
+
+  IconButton _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+    return IconButton(icon: Icon(icon, color: color), onPressed: onPressed);
+  }
+
   Widget _buildAddButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -117,19 +114,13 @@ class _BoDeScreenState extends State<BoDeScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.btnColor,
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
-        child: Text(
-          "Thêm Bộ đề",
-          style: TextStyle(fontSize: 18, color: Colors.white),
-        ),
+        child: Text("Thêm Bộ đề", style: TextStyle(fontSize: 18, color: Colors.white)),
       ),
     );
   }
 
-  // Chỉnh sửa bộ đề
   void _editItem(BuildContext context, BoDe boDe) {
     Navigator.push(
       context,
@@ -142,7 +133,6 @@ class _BoDeScreenState extends State<BoDeScreen> {
               boDe.soLuongCau = updatedBoDe.soLuongCau;
               boDe.chuDeId = updatedBoDe.chuDeId;
               boDe.trangThai = updatedBoDe.trangThai;
-              boDe.updateAt = updatedBoDe.updateAt;
             });
           },
         ),
@@ -150,7 +140,6 @@ class _BoDeScreenState extends State<BoDeScreen> {
     );
   }
 
-  // Xóa bộ đề
   void _deleteItem(BuildContext context, BoDe boDe) {
     showDialog(
       context: context,
@@ -164,14 +153,15 @@ class _BoDeScreenState extends State<BoDeScreen> {
               child: Text('Hủy', style: TextStyle(color: Colors.blue)),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  boDeList.remove(boDe);
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đã xóa Bộ đề ${boDe.boDeId}')),
-                );
+              onPressed: () async {
+                Navigator.pop(context); // Đóng hộp thoại
+                try {
+                  await boDeService.deleteBoDe(boDe.boDeId); // Gọi hàm xóa từ BoDeService
+                  _loadBoDes(); // Tải lại danh sách bộ đề
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Đã xóa Bộ đề ${boDe.boDeId}')));
+                } catch (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra: $error')));
+                }
               },
               child: Text('Xóa', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -182,7 +172,6 @@ class _BoDeScreenState extends State<BoDeScreen> {
     );
   }
 
-  // Thêm bộ đề mới
   void _addItem(BuildContext context) {
     Navigator.push(
       context,
@@ -190,31 +179,14 @@ class _BoDeScreenState extends State<BoDeScreen> {
         builder: (context) => AddBoDeScreen(
           chuDeList: chuDeList,
           onSave: (newBoDe) {
-            setState(() {
-              boDeList.add(newBoDe);
-            });
+            _loadBoDes(); // Tải lại danh sách bộ đề
           },
         ),
       ),
     );
   }
 
-  // Thêm chi tiết bộ đề
   void _addChiTietItem(BuildContext context, BoDe boDe) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddChiTietBoDeScreen(
-          boDeId: boDe.boDeId,
-          onSave: (newChiTiet) {
-            setState(() {
-              // Thêm chi tiết bộ đề vào danh sách chi tiết bộ đề của boDe
-              boDe.chiTietBoDeList.add(newChiTiet);
-            });
-          },
-          maxSoLuongCau: boDe.soLuongCau,
-        ),
-      ),
-    );
+    // Thêm logic cho việc thêm chi tiết bộ đề ở đây
   }
 }

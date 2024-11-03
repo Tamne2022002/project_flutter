@@ -33,7 +33,6 @@ class _QuizScreenState extends State<QuizScreen> {
           _timeRemaining--;
         } else {
           timer.cancel();
-          // Handle timeout (e.g., show alert or move to next question)
         }
       });
     });
@@ -70,7 +69,7 @@ class _QuizScreenState extends State<QuizScreen> {
             Navigator.pop(context);
           },
         ),
-        title: Text('Đang Luyện Tập',
+        title: Text('Đang Chơi',
             style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
       ),

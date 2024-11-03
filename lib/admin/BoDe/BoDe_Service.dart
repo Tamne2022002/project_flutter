@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/model/bode.dart';
+import 'package:project_flutter/model/chitietbode.dart';
+import 'package:project_flutter/model/question.dart';
 
 class BoDeService {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -72,24 +74,24 @@ class BoDeService {
   }
 
   // Xóa bộ đề
-Future<void> deleteBoDe(int boDeId) async {
-  // Tìm kiếm tài liệu bằng BoDe_ID
-  var querySnapshot = await firestore
-      .collection('BoDe')
-      .where('BoDe_ID', isEqualTo: boDeId)
-      .get();
+  Future<void> deleteBoDe(int boDeId) async {
+    // Tìm kiếm tài liệu bằng BoDe_ID
+    var querySnapshot = await firestore
+        .collection('BoDe')
+        .where('BoDe_ID', isEqualTo: boDeId)
+        .get();
 
-  if (querySnapshot.docs.isNotEmpty) {
-    // Xóa tài liệu
-    await querySnapshot.docs.first.reference.delete();
+    if (querySnapshot.docs.isNotEmpty) {
+      // Xóa tài liệu
+      await querySnapshot.docs.first.reference.delete();
 
-    // Cập nhật lại danh sách câu hỏi hoặc bất kỳ hành động nào cần thiết sau khi xóa bộ đề
-    await updateQuestionsAfterBoDeDeletion(boDeId);
-  } else {
-    throw Exception('Không tìm thấy bộ đề với BoDe_ID: $boDeId');
+      // Cập nhật lại danh sách câu hỏi hoặc bất kỳ hành động nào cần thiết sau khi xóa bộ đề
+      await updateQuestionsAfterBoDeDeletion(boDeId);
+    } else {
+      throw Exception('Không tìm thấy bộ đề với BoDe_ID: $boDeId');
+    }
   }
-  
-}
+
   Future<void> updateQuestionsAfterBoDeDeletion(int boDeId) async {
     // Tải danh sách bộ đề hiện tại
     var allBoDe = await firestore.collection('BoDe').get();
@@ -104,7 +106,8 @@ Future<void> deleteBoDe(int boDeId) async {
       await boDe.reference.delete();
     }
   }
-    // Hàm để lấy ID lớn nhất của bộ đề
+
+  // Hàm để lấy ID lớn nhất của bộ đề
   Future<int> getMaxBoDeId() async {
     final snapshot = await firestore.collection('BoDe').get();
     int maxId = 0;
@@ -118,4 +121,84 @@ Future<void> deleteBoDe(int boDeId) async {
 
     return maxId; // Trả về ID lớn nhất
   }
+
+    Future<int> getCTMaxBoDeId() async {
+    final snapshot = await firestore.collection('ChiTietBoDe').get();
+    int maxId = 0;
+
+    for (var doc in snapshot.docs) {
+      int currentId = doc['ChiTietBoDe_ID'] ?? 0; // Lấy giá trị CTBoDe_ID
+      if (currentId > maxId) {
+        maxId = currentId; // Cập nhật maxId nếu currentId lớn hơn
+      }
+    }
+
+    return maxId; // Trả về ID lớn nhất
+  }
+
+  // Tải danh sách chi tiết bộ đề theo ID bộ đề
+  Future<List<ChiTietBoDe>> loadChiTietBoDe(int boDeId) async {
+    final snapshot = await firestore
+        .collection('ChiTietBoDe')
+        .where('BoDe_ID', isEqualTo: boDeId)
+        .get();
+
+    List<ChiTietBoDe> chiTietList = [];
+
+    for (var doc in snapshot.docs) {
+      var data = doc.data();
+      var chiTietBoDe = ChiTietBoDe(
+        chiTietBoDeId: data['ChiTietBoDe_ID'] ?? 0,
+        cauHoiId: data['CauHoi_ID'] ?? 0,
+        boDeId: data['BoDe_ID'] ?? 0,
+        createAt: (data['create_at'] as Timestamp).toDate(),
+        updateAt: (data['update_at'] as Timestamp).toDate(),
+        trangThai: data['TrangThai'] ?? 1,
+      );
+
+      chiTietList.add(chiTietBoDe);
+    }
+
+    return chiTietList;
+  }
+
+  // Thêm chi tiết bộ đề
+  Future<void> addChiTietBoDe(ChiTietBoDe chiTietBoDe) async {
+    await firestore.collection('ChiTietBoDe').add({
+      'ChiTietBoDe_ID': chiTietBoDe.chiTietBoDeId,
+      'CauHoi_ID': chiTietBoDe.cauHoiId,
+      'BoDe_ID': chiTietBoDe.boDeId,
+      'create_at': Timestamp.fromDate(chiTietBoDe.createAt),
+      'update_at': Timestamp.fromDate(chiTietBoDe.updateAt),
+      'TrangThai': chiTietBoDe.trangThai,
+    });
+  }
+
+  Future<int> getChiTietBoDeCount(int boDeId) async {
+    final snapshot = await firestore
+        .collection('ChiTietBoDe')
+        .where('BoDe_ID', isEqualTo: boDeId)
+        .get();
+    return snapshot.docs.length;
+  }
+
+  Future<Question?> getCauHoiById(int cauHoiId) async {
+  var querySnapshot = await firestore
+      .collection('CauHoi')
+      .where('CauHoi_ID', isEqualTo: cauHoiId)
+      .get();
+
+  if (querySnapshot.docs.isNotEmpty) {
+    var data = querySnapshot.docs.first.data();
+    return Question(
+      CauHoi_ID: data['CauHoi_ID'] ?? 0,
+      NoiDung_CauHoi: data['NoiDung'] ?? '', // Thay thế bằng trường tương ứng
+      ChuDe_ID: data['ChuDe_ID'],
+      TrangThai: data['TrangThai'],
+       NgayTao: (data['NgayTao'] as Timestamp).toDate(),
+    );
+  }
+  return null;
+}
+
 }

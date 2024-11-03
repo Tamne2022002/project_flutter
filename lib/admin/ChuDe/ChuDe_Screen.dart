@@ -35,9 +35,18 @@ class _TopicsScreenState extends State<TopicsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
-            ..._topics.map(_buildTopicCard),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    ..._topics.map(_buildTopicCard),
+                    
+                  ],
+                ),
+              ),
+            ),
             _buildAddButton(context),
           ],
         ),

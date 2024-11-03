@@ -92,21 +92,53 @@ class TopicService {
 }
 
 
-// Hàm để cập nhật danh sách bộ đề
-  Future<void> updateBoDeAfterTopicDeletion(int chuDeID) async {
-    // Tải danh sách bộ đề hiện tại
-    var allBoDe = await firestore.collection('BoDe').get();
+// // Hàm để cập nhật danh sách bộ đề
+//   Future<void> updateBoDeAfterTopicDeletion(int chuDeID) async {
+//     // Tải danh sách bộ đề hiện tại
+//     var allBoDe = await firestore.collection('BoDe').get();
 
-    // Lọc ra các bộ đề không còn chủ đề hợp lệ
-    var invalidBoDe = allBoDe.docs.where((boDe) {
-      return boDe['ChuDe_ID'] == chuDeID;
-    }).toList();
+//     // Lọc ra các bộ đề không còn chủ đề hợp lệ
+//     var invalidBoDe = allBoDe.docs.where((boDe) {
+//       return boDe['ChuDe_ID'] == chuDeID;
+//     }).toList();
 
-    // Xóa các bộ đề không hợp lệ
-    for (var boDe in invalidBoDe) {
-      await boDe.reference.delete();
-    }
+//     // Xóa các bộ đề không hợp lệ
+//     for (var boDe in invalidBoDe) {
+//       await boDe.reference.delete();
+//     }
+//   }
+Future<void> updateBoDeAfterTopicDeletion(int chuDeID) async {
+  // Tải danh sách bộ đề hiện tại
+  var allBoDe = await firestore.collection('BoDe').get();
+
+  // Lọc ra các bộ đề không còn chủ đề hợp lệ
+  var invalidBoDe = allBoDe.docs.where((boDe) {
+    return boDe['ChuDe_ID'] == chuDeID;
+  }).toList();
+
+  // Xóa các bộ đề không hợp lệ và chi tiết bộ đề tương ứng
+  for (var boDe in invalidBoDe) {
+    int boDeID = boDe['BoDe_ID']; // Lấy BoDe_ID từ tài liệu
+
+    // Xóa chi tiết bộ đề có cùng BoDe_ID
+    await deleteChiTietBoDeByBoDeID(boDeID);
+
+    // Xóa bộ đề không hợp lệ
+    await boDe.reference.delete();
   }
+}
+
+// Hàm xóa chi tiết bộ đề theo BoDe_ID
+Future<void> deleteChiTietBoDeByBoDeID(int boDeID) async {
+  var querySnapshot = await firestore
+      .collection('ChiTietBoDe')
+      .where('BoDe_ID', isEqualTo: boDeID)
+      .get();
+
+  for (var doc in querySnapshot.docs) {
+    await doc.reference.delete();
+  }
+}
 
   
 

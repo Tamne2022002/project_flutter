@@ -89,10 +89,11 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
               child: ListView(
                 children: [
                   for (var question in filteredQuestions) _buildListItem(context, question),
-                  _buildAddButton(context),
+                 
                 ],
               ),
             ),
+             _buildAddButton(context),
           ],
         ),
       ),
@@ -126,61 +127,63 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
 
   // Hiển thị câu hỏi trong danh sách
   Widget _buildListItem(BuildContext context, Question question) {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: AppColors.btnColor,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              question.NoiDung_CauHoi,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Chủ đề: ${_getTopicName(question.ChuDe_ID)}', // Hiển thị tên chủ đề
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Ngày tạo: ${question.NgayTao}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Trạng thái: ${question.TrangThai}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ],
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
-              onPressed: () => _editItem(context, question),
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: () => _deleteItem(context, question),
-            ),
-          ],
+        color: AppColors.btnColor,
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                question.NoiDung_CauHoi,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Chủ đề: ${_getTopicName(question.ChuDe_ID)}', // Hiển thị tên chủ đề
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Ngày tạo: ${question.NgayTao}',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Trạng thái: ${question.TrangThai}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.edit, color: Colors.white),
+                onPressed: () => _editItem(context, question),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.white),
+                onPressed: () => _deleteItem(context, question),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -268,30 +271,33 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
     );
   }
 
-  // Thêm câu hỏi mới
-  void _addItem(BuildContext context) {
-    Question newQuestion = Question(
-      CauHoi_ID: 0, 
-      NoiDung_CauHoi: '', 
-      ChuDe_ID: 0, 
-      NgayTao: DateTime.now(), 
-      TrangThai: 1,
-    );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddQuestionScreen(
-          topics: chuDeList,
-          onSave: (addedQuestion) {
-            setState(() {
-              questions.add(addedQuestion);
-              _filterQuestions(); // Lọc lại danh sách câu hỏi
-            });
-          },
-          question: newQuestion,
-        ),
+  // Thêm câu hỏi mới
+void _addItem(BuildContext context) {
+  Question newQuestion = Question(
+    CauHoi_ID: 0,
+    NoiDung_CauHoi: '',
+    ChuDe_ID: 0,
+    NgayTao: DateTime.now(),
+    TrangThai: 1,
+  );
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AddQuestionScreen(
+        topics: chuDeList,
+        onSave: (addedQuestion) {
+          // Thay vì thêm câu hỏi vào danh sách, chỉ cần gọi _loadQuestions để tải lại từ Firestore
+          _loadQuestions(); // Tải lại danh sách câu hỏi từ Firestore
+        },
+        question: newQuestion,
       ),
-    );
-  }
+    ),
+  ).then((_) {
+    // Sau khi trở về, tải lại câu hỏi
+    _loadQuestions();
+  });
+}
+
 }

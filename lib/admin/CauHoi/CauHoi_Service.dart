@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_flutter/admin/CauHoi/DapAn_Service.dart';
 import 'package:project_flutter/admin/ChuDe/ChuDe_Service.dart';
 import 'package:project_flutter/model/DapAn.dart';
 import 'package:project_flutter/model/question.dart';
@@ -6,6 +7,7 @@ import 'package:project_flutter/model/question.dart';
 class QuestionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TopicService _topicService = TopicService();
+  final DapAnService _dapAnService = DapAnService(); // Thêm dịch vụ đáp án
 
   // Hàm để thêm câu hỏi
   Future<void> addQuestion(Question question) async {
@@ -33,6 +35,25 @@ class QuestionService {
     } else {
       throw Exception('Không tìm thấy câu hỏi với ID: ${question.CauHoi_ID}');
     }
+  }
+
+  // Hàm để lấy danh sách câu hỏi theo ID chủ đề
+  Future<List<Question>> loadQuestionsByTopicId(int chuDeId) async {
+    final snapshot = await _firestore
+        .collection('CauHoi')
+        .where('ChuDe_ID', isEqualTo: chuDeId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      var data = doc.data();
+      return Question(
+        CauHoi_ID: data['CauHoi_ID'],
+        ChuDe_ID: data['ChuDe_ID'],
+        NgayTao: (data['NgayTao'] as Timestamp).toDate(),
+        NoiDung_CauHoi: data['NoiDung'],
+        TrangThai: data['TrangThai'],
+      );
+    }).toList();
   }
 
   // Hàm để lấy danh sách câu hỏi
@@ -67,6 +88,9 @@ class QuestionService {
 
   // Hàm để xóa câu hỏi
   Future<void> deleteQuestion(int cauHoiID) async {
+    // Xóa tất cả đáp án liên quan đến câu hỏi
+    await _dapAnService.deleteAnswersByQuestionId(cauHoiID);
+
     var querySnapshot = await _firestore
         .collection('CauHoi')
         .where('CauHoi_ID', isEqualTo: cauHoiID)
@@ -77,6 +101,21 @@ class QuestionService {
     } else {
       throw Exception('Không tìm thấy câu hỏi với ID: $cauHoiID');
     }
+  }
+
+  Future<int> getMaxQuestionId() async {
+    final snapshot = await _firestore.collection('CauHoi').get();
+    int maxId = 0;
+
+    for (var doc in snapshot.docs) {
+      var data = doc.data();
+      int cauHoiId = data['CauHoi_ID'];
+      if (cauHoiId > maxId) {
+        maxId = cauHoiId; // Cập nhật maxId nếu tìm thấy ID lớn hơn
+      }
+    }
+
+    return maxId;
   }
 
   // Hàm để thêm đáp án

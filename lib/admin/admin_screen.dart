@@ -40,10 +40,10 @@ class AdminDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            _buildListTile(context, 'Danh sách Đề tài', TopicsScreen(), Icons.topic),
+            _buildListTile(context, 'Danh sách Chủ Đề', TopicsScreen(), Icons.topic),
             _buildListTile(context, 'Danh sách Bộ Đề', BoDeScreen(), Icons.book),
-            _buildListTile(context, 'Danh sách Tài khoản', AccountsScreen(), Icons.account_circle),
-            _buildListTile(context, 'Danh sách Câu hỏi', QuestionsScreen(), Icons.question_answer),
+            _buildListTile(context, 'Danh sách Tài Khoản', AccountsScreen(), Icons.account_circle),
+            _buildListTile(context, 'Danh sách Câu Hỏi', QuestionsScreen(), Icons.question_answer),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/account.dart';
+import 'package:project_flutter/authen/service.dart'; // Import AuthService
 
 import 'ThemTK_Screen.dart';
 import 'SuaTK_Screen.dart';
@@ -12,6 +13,40 @@ class AccountsScreen extends StatefulWidget {
 
 class _AccountsScreenState extends State<AccountsScreen> {
   List<Account> accounts = [];
+  List<Account> filteredAccounts = [];
+  final AuthService _authService = AuthService();
+  int? selectedRole; // Biến để lưu phân quyền đã chọn
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccounts();
+  }
+
+  Future<void> _loadAccounts() async {
+    try {
+      final loadedAccounts = await _authService.loadAccounts();
+      setState(() {
+        accounts = loadedAccounts;
+        filteredAccounts = accounts; // Khởi tạo danh sách đã lọc
+      });
+    } catch (e) {
+      print("Error loading accounts: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể tải danh sách tài khoản')),
+      );
+    }
+  }
+
+  void _filterAccounts() {
+    if (selectedRole == null) {
+      filteredAccounts = accounts; // Nếu không chọn, hiển thị tất cả
+    } else {
+      filteredAccounts =
+          accounts.where((account) => account.role == selectedRole).toList();
+    }
+    setState(() {}); // Cập nhật giao diện
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,19 +54,54 @@ class _AccountsScreenState extends State<AccountsScreen> {
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
         backgroundColor: AppColors.btnColor,
-            iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Colors.white),
         title: Text(
           "Danh sách Tài khoản",
-          style: TextStyle(fontSize: 22,color: Colors.white ),
-          
+          style: TextStyle(fontSize: 22, color: Colors.white),
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
-            // Hiển thị danh sách tài khoản
-            for (var account in accounts) _buildListItem(context, account),
+            // Dropdown để chọn phân quyền
+            DropdownButton<int>(
+              dropdownColor: AppColors.btnColor,
+              hint: Text(
+                'Chọn phân quyền',
+                style: TextStyle(color: Colors.white),
+              ),
+              value: selectedRole,
+              onChanged: (value) {
+                setState(() {
+                  selectedRole = value;
+                  _filterAccounts(); // Gọi phương thức lọc
+                });
+              },
+              items: [
+                DropdownMenuItem(
+                    value: 0,
+                    child: Text('Người Dùng',
+                        style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(
+                    value: 1,
+                    child:
+                        Text('Admin', style: TextStyle(color: Colors.white))),
+              ],
+            ),
+            SizedBox(height: 16), // Khoảng cách
+            Expanded(
+              child: filteredAccounts.isEmpty
+                  ? Center(
+                      child:
+                          CircularProgressIndicator()) // Hiển thị loading nếu chưa có dữ liệu
+                  : ListView(
+                      children: [
+                        for (var account in filteredAccounts)
+                          _buildListItem(context, account),
+                      ],
+                    ),
+            ),
             // Nút thêm tài khoản
             _buildAddButton(context),
           ],
@@ -40,12 +110,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  // Hiển thị thông tin tài khoản trong danh sách
   Widget _buildListItem(BuildContext context, Account account) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16), // Bo góc Card
+        borderRadius: BorderRadius.circular(16),
       ),
       margin: EdgeInsets.symmetric(vertical: 8),
       color: AppColors.btnColor,
@@ -60,7 +129,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
           ),
         ),
         subtitle: Text(
-          'Email: ${account.email}\nSĐT: ${account.phone}\nXP: ${account.xp}\nQuyền hạn: ${account.role}',
+          'Email: ${account.email}\nSĐT: ${account.phone}\nXP: ${account.xp}\nQuyền hạn: ${account.role}\nID: ${account.id}',
           style: TextStyle(color: Colors.white),
         ),
         trailing: Row(
@@ -80,17 +149,16 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  // Nút thêm tài khoản mới
   Widget _buildAddButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: ElevatedButton(
         onPressed: () => _addItem(context),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.btnColor, // Màu nền button
+          backgroundColor: AppColors.btnColor,
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Bo góc button
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
         child: Text(
@@ -101,7 +169,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  // Chỉnh sửa tài khoản
   void _editItem(BuildContext context, Account account) {
     Navigator.push(
       context,
@@ -123,7 +190,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  // Xóa tài khoản
   void _deleteItem(BuildContext context, Account account) {
     showDialog(
       context: context,
@@ -137,14 +203,24 @@ class _AccountsScreenState extends State<AccountsScreen> {
               child: Text('Hủy', style: TextStyle(color: Colors.blue)),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  accounts.remove(account);
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đã xóa ${account.name}')),
-                );
+              onPressed: () async {
+                // Gọi hàm xóa tài khoản từ AuthService
+                bool success = await _authService.deleteAccount(account.id);
+                if (success) {
+                  setState(() {
+                    accounts.remove(account);
+                    _filterAccounts(); // Cập nhật danh sách đã lọc
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đã xóa ${account.name}')),
+                  );
+                } else {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Xóa thất bại!')),
+                  );
+                }
               },
               child: Text('Xóa', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -155,19 +231,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  // Thêm tài khoản mới
   void _addItem(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddAccountScreen(
-          onSave: (newAccount) {
-            setState(() {
-              accounts.add(newAccount);
-            });
-          },
-        ),
+        builder: (context) => AddAccountScreen(),
       ),
-    );
+    ).then((newAccount) {
+      if (newAccount != null) {
+        setState(() {
+          accounts.add(newAccount);
+          _filterAccounts(); // Cập nhật danh sách đã lọc
+        });
+      }
+    });
   }
 }

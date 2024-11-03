@@ -15,10 +15,12 @@ class QuestionsScreen extends StatefulWidget {
 
 class _QuestionsScreenState extends State<QuestionsScreen> {
   List<Question> questions = [];
+  List<Question> filteredQuestions = [];
   List<Topic> chuDeList = []; 
   final QuestionService _questionService = QuestionService();
   final TopicService _topicService = TopicService();
   bool isLoading = true;
+  int? selectedTopicId;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
   Future<void> _loadQuestions() async {
     try {
       questions = await _questionService.loadQuestions();
+      _filterQuestions(); // Lọc câu hỏi ban đầu
       setState(() {}); // Cập nhật giao diện
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -50,6 +53,21 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
     }
   }
 
+  // Lọc câu hỏi theo chủ đề đã chọn
+  void _filterQuestions() {
+    if (selectedTopicId == null) {
+      filteredQuestions = questions; // Hiển thị tất cả câu hỏi nếu không có chủ đề nào được chọn
+    } else {
+      filteredQuestions = questions.where((q) => q.ChuDe_ID == selectedTopicId).toList();
+    }
+  }
+
+  // Lấy tên chủ đề từ ID
+  String _getTopicName(int? chuDeId) {
+    final topic = chuDeList.firstWhere((t) => t.ChuDe_ID == chuDeId, orElse: () => Topic(ChuDe_ID: 0, TenChuDe: 'Không có chủ đề',SLCauHoi: 0));
+    return topic.TenChuDe;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,73 +82,108 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
-            for (var question in questions) _buildListItem(context, question),
-            _buildAddButton(context),
+            _buildDropdown(), // Thêm dropdown menu cho chủ đề
+            Expanded(
+              child: ListView(
+                children: [
+                  for (var question in filteredQuestions) _buildListItem(context, question),
+                 
+                ],
+              ),
+            ),
+             _buildAddButton(context),
           ],
         ),
       ),
     );
   }
 
+  // Xây dựng dropdown menu cho chủ đề
+  Widget _buildDropdown() {
+    return DropdownButton<int>(
+      value: selectedTopicId,
+      hint: Text("Chọn Chủ đề", style: TextStyle(color: Colors.white)),
+      dropdownColor: AppColors.btnColor,
+      isExpanded: true,
+      onChanged: (int? newValue) {
+        setState(() {
+          selectedTopicId = newValue; // Cập nhật chủ đề đã chọn
+          _filterQuestions(); // Lọc câu hỏi theo chủ đề đã chọn
+        });
+      },
+      items: chuDeList.map<DropdownMenuItem<int>>((Topic topic) {
+        return DropdownMenuItem<int>(
+          value: topic.ChuDe_ID,
+          child: Text(
+            topic.TenChuDe,
+            style: TextStyle(color: Colors.white),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   // Hiển thị câu hỏi trong danh sách
   Widget _buildListItem(BuildContext context, Question question) {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: AppColors.btnColor,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              question.NoiDung_CauHoi,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Đề tài: ${question.ChuDe_ID}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Ngày tạo: ${question.NgayTao}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Trạng thái: ${question.TrangThai}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ],
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
-              onPressed: () => _editItem(context, question),
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: () => _deleteItem(context, question),
-            ),
-          ],
+        color: AppColors.btnColor,
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                question.NoiDung_CauHoi,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Chủ đề: ${_getTopicName(question.ChuDe_ID)}', // Hiển thị tên chủ đề
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Ngày tạo: ${question.NgayTao}',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Trạng thái: ${question.TrangThai}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.edit, color: Colors.white),
+                onPressed: () => _editItem(context, question),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.white),
+                onPressed: () => _deleteItem(context, question),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -167,7 +220,6 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
           topics: chuDeList,
           onSave: (updatedQuestion) {
             setState(() {
-              // Cập nhật câu hỏi trong danh sách
               question.NoiDung_CauHoi = updatedQuestion.NoiDung_CauHoi;
               question.ChuDe_ID = updatedQuestion.ChuDe_ID;
               _loadQuestions(); // Làm mới danh sách câu hỏi
@@ -197,6 +249,7 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
                   await _questionService.deleteQuestion(question.CauHoi_ID);
                   setState(() {
                     questions.remove(question);
+                    _filterQuestions(); // Làm mới danh sách câu hỏi sau khi xóa
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Đã xóa ${question.NoiDung_CauHoi}')),
@@ -218,15 +271,14 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
     );
   }
 
+
   // Thêm câu hỏi mới
-// Thêm câu hỏi mới
 void _addItem(BuildContext context) {
-  // Tạo một đối tượng câu hỏi mới với giá trị mặc định
   Question newQuestion = Question(
-    CauHoi_ID: 0, 
-    NoiDung_CauHoi: '', 
-    ChuDe_ID: 0, 
-    NgayTao: DateTime.now(), 
+    CauHoi_ID: 0,
+    NoiDung_CauHoi: '',
+    ChuDe_ID: 0,
+    NgayTao: DateTime.now(),
     TrangThai: 1,
   );
 
@@ -236,15 +288,16 @@ void _addItem(BuildContext context) {
       builder: (context) => AddQuestionScreen(
         topics: chuDeList,
         onSave: (addedQuestion) {
-          // Thay vì gọi _loadQuestions(), thêm câu hỏi mới vào danh sách
-          setState(() {
-            questions.add(addedQuestion); // Thêm câu hỏi mới vào danh sách
-          });
+          // Thay vì thêm câu hỏi vào danh sách, chỉ cần gọi _loadQuestions để tải lại từ Firestore
+          _loadQuestions(); // Tải lại danh sách câu hỏi từ Firestore
         },
         question: newQuestion,
       ),
     ),
-  );
+  ).then((_) {
+    // Sau khi trở về, tải lại câu hỏi
+    _loadQuestions();
+  });
 }
 
 }

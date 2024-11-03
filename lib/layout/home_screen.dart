@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
+import 'package:project_flutter/layout/history/Lichsu_screen.dart';
 import 'package:project_flutter/layout/mode_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -17,7 +18,8 @@ class HomeScreen extends StatelessWidget {
           icon: Icon(Icons.menu, color: Colors.white),
           onPressed: () {},
         ),
-        title: Text('TRANG CHỦ', style: TextStyle(fontSize: 20, color: Colors.white)),
+        title: Text('TRANG CHỦ',
+            style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -39,13 +41,16 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => ModeScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        ModeScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0); // Start from the right
                       const end = Offset.zero;
                       const curve = Curves.ease;
 
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      var tween = Tween(begin: begin, end: end)
+                          .chain(CurveTween(curve: curve));
                       var offsetAnimation = animation.drive(tween);
 
                       return SlideTransition(
@@ -55,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                 );
-              }, 
+              },
             ),
             CustomButton(
               icon: Icons.people,
@@ -70,11 +75,17 @@ class HomeScreen extends StatelessWidget {
             CustomButton(
               icon: Icons.history,
               text: 'Lịch sử chơi',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: 
+                  (context) => HistoryScreen()),
+                );
+              },
             ),
           ],
         ),
       ),
-    ); 
+    );
   }
 }

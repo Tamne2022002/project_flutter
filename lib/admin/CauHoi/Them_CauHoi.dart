@@ -185,10 +185,18 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   correctAnswerIndex = value;
+
                                   // Cập nhật lại trạng thái đúng/sai cho đáp án
                                   for (int i = 0; i < answers.length; i++) {
-                                    answers[i].DungSai = (i != value);
-                                    answers[i].Diem = (i == value) ? 10 : 0;
+                                    if (i == value) {
+                                      answers[i].DungSai = true; // Đáp án đúng
+                                      answers[i].Diem =
+                                          10; // Điểm cho đáp án đúng
+                                    } else {
+                                      answers[i].DungSai = false; // Đáp án sai
+                                      answers[i].Diem =
+                                          0; // Điểm cho đáp án sai
+                                    }
                                   }
                                 });
                               },
@@ -201,12 +209,12 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                     SizedBox(height: 16),
 
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (titleController.text.isNotEmpty &&
                             chuDeId != null) {
-                          // Tạo ID cho câu hỏi mới
+                          // Lấy ID lớn nhất hiện tại
                           int newCauHoiId =
-                              cauHoiList.isNotEmpty ? cauHoiList.length + 1 : 1;
+                              await _questionService.getMaxQuestionId() + 1;
 
                           // Tạo câu hỏi mới
                           Question newQuestion = Question(
@@ -229,15 +237,17 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                             }
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content:
-                                    Text('Câu hỏi và đáp án đã được thêm')));
+                              content: Text('Câu hỏi và đáp án đã được thêm'),
+                            ));
                           }).catchError((error) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Có lỗi xảy ra: $error')));
+                              content: Text('Có lỗi xảy ra: $error'),
+                            ));
                           });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('Vui lòng nhập đủ thông tin')));
+                            content: Text('Vui lòng nhập đủ thông tin'),
+                          ));
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -245,10 +255,13 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                         padding:
                             EdgeInsets.symmetric(vertical: 12, horizontal: 30),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
-                      child: Text('Thêm Câu hỏi',
-                          style: TextStyle(fontSize: 18, color: Colors.white)),
+                      child: Text(
+                        'Thêm Câu hỏi',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),

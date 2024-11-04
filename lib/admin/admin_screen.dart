@@ -27,9 +27,7 @@ class AdminDashboard extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
-            onPressed: (
-              
-            ) { 
+            onPressed: () { 
               // Chức năng đăng xuất
               _showLogoutDialog(context);
             },

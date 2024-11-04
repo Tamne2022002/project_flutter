@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
-import 'package:project_flutter/layout/button_game.dart';
+import 'package:project_flutter/layout/compete/chitiettraloi_Service.dart';
+import 'package:project_flutter/layout/compete/choigame_Service.dart';
 import 'package:project_flutter/layout/playgame/answers_Service.dart';
 import 'package:project_flutter/layout/playgame/question_Service.dart';
 import 'package:project_flutter/model/DapAn.dart';
+import 'package:project_flutter/model/chitiettraloi.dart';
+import 'package:project_flutter/model/choigame.dart';
 import 'package:project_flutter/model/question.dart';
 
 class QuizScreen extends StatefulWidget {
   final int boDeId;
-  final int idUser; 
+  final int idUser;
 
-  const QuizScreen({Key? key, required this.boDeId, required this.idUser}) : super(key: key);
+  const QuizScreen({Key? key, required this.boDeId, required this.idUser})
+      : super(key: key);
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -20,22 +24,30 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   final QuestionService _questionService = QuestionService();
   final DapAnService _dapanService = DapAnService();
+  final ChoiGameService _choiGameService = ChoiGameService();
+  final ChiTietTraLoiService _chiTietTraLoiService = ChiTietTraLoiService();
 
   int _timeRemaining = 10;
   Timer? _timer;
   int _currentQuestionIndex = 0;
   int _score = 0;
+  bool isAnswerSaved = false;
   List<Question> _questions = [];
   Map<int, List<DapAn>> _answersMap = {};
-  List<Color> _optionColors = [Colors.white, Colors.white, Colors.white, Colors.white];
+  List<Color> _optionColors = [
+    Colors.white,
+    Colors.white,
+    Colors.white,
+    Colors.white
+  ];
 
   @override
   void initState() {
     super.initState();
-    startTimer();
     loadQuestionsAndAnswers();
+    startTimer();
   }
- 
+
   void startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -44,14 +56,23 @@ class _QuizScreenState extends State<QuizScreen> {
           _timeRemaining--;
         } else {
           timer.cancel();
-
-        List<DapAn>? currentAnswers = _answersMap[_questions[_currentQuestionIndex].CauHoi_ID];
-        if (currentAnswers != null && currentAnswers.isNotEmpty) {
-          handleAnswerSelected(currentAnswers[0], 0); // Chọn câu trả lời đầu tiên khi hết thời gian
-        }
+          autoSelectAnswer();
         }
       });
     });
+  }
+
+  void restartTimer() {
+    if (_timer?.isActive ?? false) _timer!.cancel();
+    startTimer();
+  }
+
+  void autoSelectAnswer() {
+    List<DapAn>? currentAnswers =
+        _answersMap[_questions[_currentQuestionIndex].CauHoi_ID];
+    if (currentAnswers != null && currentAnswers.isNotEmpty) {
+      handleAnswerSelected(currentAnswers[0], 0);
+    }
   }
 
   @override
@@ -61,44 +82,131 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> loadQuestionsAndAnswers() async {
-    // Lấy câu hỏi từ QuestionService
     _questions = await _questionService.loadQuestions(widget.boDeId);
 
-    // Lấy đáp án cho từng câu hỏi từ DapAnService và lưu vào map
     for (var question in _questions) {
-      _answersMap[question.CauHoi_ID] = await _dapanService.loadAnswers(question.CauHoi_ID);
+      _answersMap[question.CauHoi_ID] =
+          await _dapanService.loadAnswers(question.CauHoi_ID);
     }
 
-    setState(() {}); // Cập nhật lại giao diện khi đã có dữ liệu
+    setState(() {});
   }
 
-  void handleAnswerSelected(DapAn answer, int index) {
+  Future<void> _endGame() async {
+    int nextId = await _choiGameService.getNextGameId();
+
+    ChoiGame gameResult = ChoiGame(
+      id: nextId,
+      boDe_ID: widget.boDeId,
+      chuDe_ID: _questions.first.ChuDe_ID,
+      nguoiDung_ID: widget.idUser,
+      theLoai: "luyentap",
+      trangThai: 1,
+      create_at: DateTime.now(),
+      tongDiem: _score,
+    );
+
+    await _choiGameService.saveGameResult(gameResult);
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> handleAnswerSelected(DapAn answer, int index) async {
+    if (!mounted || isAnswerSaved) return;
+
     setState(() {
       if (answer.DungSai) {
-        _optionColors[index] = Colors.green; // Đáp án đúng
-        _score += answer.Diem; // Cộng điểm nếu trả lời đúng
+        _optionColors[index] = Colors.green;
+        _score += answer.Diem;
       } else {
-        _optionColors[index] = Colors.red; // Đáp án sai
+        _optionColors[index] = Colors.red;
       }
     });
+    int nextId_detail = await _chiTietTraLoiService.getNextChiTietTraLoiId();
 
-    // Sau 2 giây chuyển sang câu hỏi tiếp theo
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() {
-        if (_currentQuestionIndex < _questions.length - 1) {
-          _currentQuestionIndex++;
-          _optionColors = [Colors.white, Colors.white, Colors.white, Colors.white];
+    int thoiGianTraLoi = 10 - _timeRemaining;
+    ChiTietTraLoi chiTietTraLoi = ChiTietTraLoi(
+      id: nextId_detail,
+      gameId: widget.boDeId,
+      cauHoiId: _questions[_currentQuestionIndex].CauHoi_ID,
+      diem: _score,
+      thoiGianTraLoi: thoiGianTraLoi,
+      trangThai: answer.DungSai ? 1 : 0,
+      createAt: DateTime.now(),
+    );
 
-          _timeRemaining = 10; // Đặt lại thời gian ban đầu
-          startTimer();
-        } else {
-          // Kết thúc câu hỏi, quay về trang chủ đề
-          Navigator.pop(context);
-        }
-      });
+    await _chiTietTraLoiService.saveChiTietTraLoi(chiTietTraLoi);
+    isAnswerSaved = true;
+
+    if (_timer?.isActive ?? false) _timer!.cancel(); // Dừng timer hiện tại
+
+    setState(() {
+      if (_currentQuestionIndex < _questions.length - 1) {
+        _currentQuestionIndex++;
+        _optionColors = [
+          Colors.white,
+          Colors.white,
+          Colors.white,
+          Colors.white
+        ];
+        _timeRemaining = 10; // Đặt lại thời gian cho câu hỏi tiếp theo
+        isAnswerSaved = false;
+        startTimer(); // Bắt đầu lại timer ngay lập tức
+      } else {
+        _endGame();
+      }
     });
   }
-  
+
+  Future<void> showExitConfirmationDialog() async {
+    bool? confirmExit = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Xác nhận thoát'),
+          content: Text(
+              'Bạn có chắc chắn muốn thoát không? Kết quả của bạn sẽ được lưu lại.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // Hủy thoát
+              child: Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(true), // Xác nhận thoát
+              child: Text('Thoát'),
+            ),
+          ],
+        );
+      },
+    );
+
+    Future<void> _saveCurrentGame() async {
+      int nextId = await _choiGameService.getNextGameId();
+
+      ChoiGame gameOutResult = ChoiGame(
+        id: nextId,
+        boDe_ID: widget.boDeId,
+        chuDe_ID: _questions.isNotEmpty ? _questions.first.ChuDe_ID : 0,
+        nguoiDung_ID: widget.idUser,
+        theLoai: "luyentap",
+        trangThai: 1,
+        create_at: DateTime.now(),
+        tongDiem: _score,
+      );
+
+      await _choiGameService.saveGameResult(gameOutResult);
+    }
+
+    if (confirmExit == true) {
+      await _saveCurrentGame(); // Lưu kết quả
+      if (mounted) {
+        Navigator.pop(context); // Thoát ra màn hình trước
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_questions.isEmpty || _answersMap.isEmpty) {
@@ -117,11 +225,12 @@ class _QuizScreenState extends State<QuizScreen> {
         backgroundColor: AppColors.btnColor,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
+          onPressed: () async {
+            await showExitConfirmationDialog();
           },
         ),
-        title: Text('Đang Chơi - ID: ${widget.idUser}', style: TextStyle(fontSize: 20, color: Colors.white)),
+        title: Text('Đang Chơi',
+            style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
       ),
       body: Padding(
@@ -150,11 +259,11 @@ class _QuizScreenState extends State<QuizScreen> {
                 textAlign: TextAlign.start,
               ),
             ),
- 
             SizedBox(height: 10),
             TextField(
-              enabled: false, // Không cho phép chỉnh sửa
-              controller: TextEditingController(text: currentQuestion.NoiDung_CauHoi),
+              enabled: false,
+              controller:
+                  TextEditingController(text: currentQuestion.NoiDung_CauHoi),
               style: TextStyle(fontSize: 18, color: Colors.white),
               textAlign: TextAlign.start,
               maxLines: null,
@@ -186,7 +295,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                       ),
                       onPressed: () => handleAnswerSelected(answer, index),
-                      child: Text(answer.ND_DapAn, style: TextStyle(fontSize: 18)),
+                      child:
+                          Text(answer.ND_DapAn, style: TextStyle(fontSize: 18)),
                     ),
                   );
                 }).toList(),
@@ -195,6 +305,6 @@ class _QuizScreenState extends State<QuizScreen> {
           ],
         ),
       ),
-    ); 
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:project_flutter/authen/login_screen.dart';
 import 'package:project_flutter/authen/service.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
+import 'package:project_flutter/layout/history/Lichsu_screen.dart';
 import 'package:project_flutter/layout/mode_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -21,7 +22,8 @@ final int idUser;
           icon: Icon(Icons.menu, color: Colors.white),
           onPressed: () {},
         ),
-        title: Text('TRANG CHỦ', style: TextStyle(fontSize: 20, color: Colors.white)),
+        title: Text('TRANG CHỦ',
+            style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -46,12 +48,13 @@ final int idUser;
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) => ModeScreen(idUser: idUser),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) { 
                       const begin = Offset(1.0, 0.0); // Start from the right
                       const end = Offset.zero;
                       const curve = Curves.ease;
 
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      var tween = Tween(begin: begin, end: end)
+                          .chain(CurveTween(curve: curve));
                       var offsetAnimation = animation.drive(tween);
 
                       return SlideTransition(
@@ -61,7 +64,7 @@ final int idUser;
                     },
                   ),
                 );
-              }, 
+              },
             ),
             CustomButton(
               icon: Icons.people,
@@ -76,13 +79,19 @@ final int idUser;
             CustomButton(
               icon: Icons.history,
               text: 'Lịch sử chơi',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: 
+                  (context) => HistoryScreen()),
+                );
+              },
             ),
           ],
         ),
       ),
-    ); 
-  }
+    );
+  } 
 
   // Hiển thị Dialog đăng xuất
   void _showLogoutDialog(BuildContext context) {
@@ -118,6 +127,3 @@ final int idUser;
     );
   }
 }
-
-
-  

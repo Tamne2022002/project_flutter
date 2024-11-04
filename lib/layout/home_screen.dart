@@ -8,7 +8,7 @@ import 'package:project_flutter/layout/history/Lichsu_screen.dart';
 import 'package:project_flutter/layout/mode_screen.dart';
 
 class HomeScreen extends StatelessWidget {
- final int idUser; 
+final int idUser; 
  final auth = AuthService();
  HomeScreen({Key? key, required this.idUser}) : super(key: key);
 
@@ -91,6 +91,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
 
   // Hiển thị Dialog đăng xuất
   void _showLogoutDialog(BuildContext context) {

@@ -6,8 +6,7 @@ import 'package:project_flutter/layout/practice/practice_screen.dart';
 import 'package:project_flutter/authen/login_screen.dart';
 
 Future<void>  main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  WidgetsFlutterBinding.ensureInitialized(); 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
 );

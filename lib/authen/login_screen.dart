@@ -143,6 +143,7 @@ _login() async {
     if (userDoc.exists) {
       // Lấy giá trị phanQuyen_ID
       int phanQuyenID = userDoc['phanQuyen_ID'];
+      int userID = userDoc['nguoiDung_ID'];
 
       if (phanQuyenID == 1) {
         // Phân quyền là 1, chuyển đến AdminDashboard
@@ -152,10 +153,13 @@ _login() async {
         );
       } else if (phanQuyenID == 0) {
         // Phân quyền là 0, chuyển đến HomeScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(idUser: userID),
+              ),
+            );
+
       } else {
         // Phân quyền không hợp lệ
         _showSnackBar("Phân quyền không hợp lệ!", Colors.red);

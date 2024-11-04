@@ -48,7 +48,7 @@ final int idUser;
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) => ModeScreen(idUser: idUser),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) { 
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0); // Start from the right
                       const end = Offset.zero;
                       const curve = Curves.ease;
@@ -91,7 +91,7 @@ final int idUser;
         ),
       ),
     );
-  } 
+  }
 
   // Hiển thị Dialog đăng xuất
   void _showLogoutDialog(BuildContext context) {

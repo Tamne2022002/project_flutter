@@ -48,6 +48,16 @@ class _QuizScreenState extends State<QuizScreen> {
     startTimer();
   }
 
+  Future<void> loadQuestionsAndAnswers() async {
+    _questions = await _questionService.loadQuestions(widget.boDeId);
+
+    for (var question in _questions) {
+      _answersMap[question.CauHoi_ID] =
+          await _dapanService.loadAnswers(question.CauHoi_ID);
+    }
+    setState(() {});
+  }
+
   void startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -80,17 +90,7 @@ class _QuizScreenState extends State<QuizScreen> {
     _timer?.cancel();
     super.dispose();
   }
-
-  Future<void> loadQuestionsAndAnswers() async {
-    _questions = await _questionService.loadQuestions(widget.boDeId);
-
-    for (var question in _questions) {
-      _answersMap[question.CauHoi_ID] =
-          await _dapanService.loadAnswers(question.CauHoi_ID);
-    }
-
-    setState(() {});
-  }
+ 
 
   Future<void> _endGame() async {
     int nextId = await _choiGameService.getNextGameId();
@@ -123,11 +123,11 @@ class _QuizScreenState extends State<QuizScreen> {
         _optionColors[index] = Colors.red;
       }
     });
-    int nextId_detail = await _chiTietTraLoiService.getNextChiTietTraLoiId();
-
+    
+    int nextidDetail = await _chiTietTraLoiService.getNextChiTietTraLoiId();
     int thoiGianTraLoi = 10 - _timeRemaining;
     ChiTietTraLoi chiTietTraLoi = ChiTietTraLoi(
-      id: nextId_detail,
+      id: nextidDetail,
       gameId: widget.boDeId,
       cauHoiId: _questions[_currentQuestionIndex].CauHoi_ID,
       diem: _score,
@@ -139,20 +139,18 @@ class _QuizScreenState extends State<QuizScreen> {
     await _chiTietTraLoiService.saveChiTietTraLoi(chiTietTraLoi);
     isAnswerSaved = true;
 
-    if (_timer?.isActive ?? false) _timer!.cancel(); // Dừng timer hiện tại
+    if (_timer?.isActive ?? false) _timer!.cancel(); 
 
     setState(() {
       if (_currentQuestionIndex < _questions.length - 1) {
         _currentQuestionIndex++;
-        _optionColors = [
-          Colors.white,
-          Colors.white,
-          Colors.white,
-          Colors.white
-        ];
-        _timeRemaining = 10; // Đặt lại thời gian cho câu hỏi tiếp theo
+        _optionColors = [ Colors.white, Colors.white, Colors.white, Colors.white];
+
+        // set lại thời gian 
+        _timeRemaining = 10;
         isAnswerSaved = false;
-        startTimer(); // Bắt đầu lại timer ngay lập tức
+        startTimer();
+
       } else {
         _endGame();
       }
@@ -169,12 +167,12 @@ class _QuizScreenState extends State<QuizScreen> {
               'Bạn có chắc chắn muốn thoát không? Kết quả của bạn sẽ được lưu lại.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Hủy thoát
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text('Hủy'),
             ),
             TextButton(
               onPressed: () =>
-                  Navigator.of(context).pop(true), // Xác nhận thoát
+                  Navigator.of(context).pop(true),
               child: Text('Thoát'),
             ),
           ],
@@ -200,9 +198,9 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     if (confirmExit == true) {
-      await _saveCurrentGame(); // Lưu kết quả
+      await _saveCurrentGame();
       if (mounted) {
-        Navigator.pop(context); // Thoát ra màn hình trước
+        Navigator.pop(context);
       }
     }
   }
@@ -284,19 +282,22 @@ class _QuizScreenState extends State<QuizScreen> {
                 children: currentAnswers.asMap().entries.map((entry) {
                   int index = entry.key;
                   DapAn answer = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _optionColors[index],
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  return Container(
+                    width: MediaQuery.sizeOf(context).width,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _optionColors[index],
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
+                        onPressed: () => handleAnswerSelected(answer, index),
+                        child:
+                            Text(answer.ND_DapAn, style: TextStyle(fontSize: 18)),
                       ),
-                      onPressed: () => handleAnswerSelected(answer, index),
-                      child:
-                          Text(answer.ND_DapAn, style: TextStyle(fontSize: 18)),
                     ),
                   );
                 }).toList(),

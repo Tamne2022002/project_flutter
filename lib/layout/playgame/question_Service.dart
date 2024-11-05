@@ -4,10 +4,10 @@ import 'package:project_flutter/model/question.dart';
 class QuestionService {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<List<Question>> loadQuestions(int boDeId) async {
+  Future<List<Question>> loadQuestions(int chuDeid) async {
 
     final snapshot = await firestore.collection('CauHoi')
-        .where('ChuDe_ID', isEqualTo: boDeId)
+        .where('ChuDe_ID', isEqualTo: chuDeid)
         .get();
     List<Question> loadedQuestions = [];
 

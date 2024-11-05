@@ -13,8 +13,9 @@ import 'package:project_flutter/model/question.dart';
 class QuizScreen extends StatefulWidget {
   final int boDeId;
   final int idUser;
+  final int chudeID;
 
-  const QuizScreen({Key? key, required this.boDeId, required this.idUser})
+  const QuizScreen({Key? key, required this.boDeId, required this.idUser,required this.chudeID})
       : super(key: key);
 
   @override
@@ -49,7 +50,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> loadQuestionsAndAnswers() async {
-    _questions = await _questionService.loadQuestions(widget.boDeId);
+    _questions = await _questionService.loadQuestions(widget.chudeID);
 
     for (var question in _questions) {
       _answersMap[question.CauHoi_ID] =

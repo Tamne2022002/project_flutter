@@ -14,8 +14,9 @@ class QuizScreen extends StatefulWidget {
   final int boDeId;
   final int idUser;
   final int chudeID;
+  final int sluongcau;
 
-  const QuizScreen({Key? key, required this.boDeId, required this.idUser,required this.chudeID})
+  const QuizScreen({Key? key, required this.boDeId, required this.idUser,required this.chudeID ,required this.sluongcau})
       : super(key: key);
 
   @override
@@ -50,7 +51,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> loadQuestionsAndAnswers() async {
-    _questions = await _questionService.loadQuestions(widget.chudeID);
+    _questions = await _questionService.loadQuestions(widget.chudeID, widget.sluongcau);
 
     for (var question in _questions) {
       _answersMap[question.CauHoi_ID] =

@@ -71,7 +71,7 @@ class _TopicSetScreenState extends State<TopicSetScreen> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => QuizScreen(boDeId: boDe.boDeId, idUser: widget.idUser,chudeID: widget.chuDeId,),
+                      builder: (context) => QuizScreen(boDeId: boDe.boDeId, idUser: widget.idUser,chudeID: widget.chuDeId,sluongcau: boDe.soLuongCau),
                     ),
                   );
                 },

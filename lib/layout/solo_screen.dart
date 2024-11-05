@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
-import 'package:project_flutter/layout/practice_screen.dart';
-import 'package:project_flutter/layout/room_screen.dart';
-import 'package:project_flutter/layout/searchroom_screen.dart';
+import 'package:project_flutter/layout/practice/practice_screen.dart';
+import 'package:project_flutter/layout/room/room_screen.dart';
+import 'package:project_flutter/layout/room/searchroom_screen.dart';
 
 class CompeteScreen extends StatelessWidget {
   const CompeteScreen({super.key});

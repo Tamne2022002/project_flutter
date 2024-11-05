@@ -2,12 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
-import 'package:project_flutter/layout/practice_screen.dart';
+import 'package:project_flutter/layout/practice/practice_screen.dart';
 import 'package:project_flutter/layout/solo_screen.dart';
 
 class ModeScreen extends StatelessWidget {
-  const ModeScreen({super.key});
-
+  final int idUser; 
+ ModeScreen({Key? key, required this.idUser}) : super(key: key);
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +37,7 @@ class ModeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => PracticeScreen(),
+                    pageBuilder: (context, animation, secondaryAnimation) => PracticeScreen(idUser: idUser),
                     transitionsBuilder: (context, animation, secondaryAnimation, child) {
                       const begin = Offset(1.0, 0.0);
                       const end = Offset.zero;

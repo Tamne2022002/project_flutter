@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -32,17 +32,19 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
     try {
       final loadedPractices =
           await _historyPracticeService.getLuyenTapList();
+      final loadedTopics = await _historyPracticeService.getChuDeList();
       setState(() {
         luyenTapList = loadedPractices;
+        chuDeList = loadedTopics;
       });
     } catch (e) {
-      print("Error loading b: $e");
+      log("Error loading: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Không thể tại danh sách lịch sử luyện tập')),
       );
     }
   }
-
+  
   // Lấy tên chủ đề từ ID
   String _getTopicName(int? chuDeId) {
     final topic = chuDeList.firstWhere((t) => t.ChuDe_ID == chuDeId, orElse: () => Topic(ChuDe_ID: 0, TenChuDe: 'Không có chủ đề',SLCauHoi: 0));
@@ -69,7 +71,6 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
               itemBuilder: (context, index) {
                 if (luyenTapList.length > 0) {
                   var data = luyenTapList[index];
-                  
                   return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: OutlinedButton(
@@ -78,7 +79,7 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const DetailPracticeHistoryScreen()));
+                                      DetailPracticeHistoryScreen(choiGameInfo: data.id, chuDe_ID: data.chuDe_ID, boDe_ID: data.boDe_ID)));
                         },
                         style: OutlinedButton.styleFrom(
                           elevation: 5.0,

@@ -1,45 +1,45 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_flutter/model/DapAn.dart';
+import 'package:project_flutter/model/account.dart';
 import 'package:project_flutter/model/chitiettraloi.dart';
 import 'package:project_flutter/model/choigame.dart';
 import 'package:project_flutter/model/topic.dart';
+import 'package:project_flutter/model/chitietbode.dart';
+import 'package:project_flutter/model/question.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 
 class HistoryPracticeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? user = FirebaseAuth.instance.currentUser;
 
-  Future<String?> getCurrentUserId() async {
-    // Lấy người dùng hiện tại từ FirebaseAuth
-    User? user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      // Nếu người dùng đã đăng nhập, trả về UID của họ
-      
-      return user.uid;
-    } else {
-      // Nếu chưa đăng nhập, trả về null
-      return null;
-    }
-  }
-
-  Future<DocumentSnapshot?> getUserDocumentByUid() async {
-    String? uid = await getCurrentUserId();
-    if (uid == null) {
+  Future<Account?> getUserDocumentByUid() async {
+    if (user == null) {
       print("Người dùng chưa đăng nhập.");
       return null;
     }
 
-    // Truy vấn collection `NguoiDung` bằng `nguoiDung_ID`
+    // Truy vấn collection `NguoiDung` bằng `email`
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('NguoiDung')
-        .where('nguoiDung_ID', isEqualTo: uid)
+        .where('email', isEqualTo: user?.email)
         .limit(1) // Giới hạn chỉ lấy 1 document
         .get();
 
     if (querySnapshot.docs.isNotEmpty) {
       // Nếu tìm thấy, trả về document đầu tiên
-      log("Current user ID: ${querySnapshot.docs.first}");
-      return querySnapshot.docs.first;
+      var userDetail = querySnapshot.docs
+          .map((e) => Account(
+              id: e['nguoiDung_ID'],
+              name: e['hoTen'],
+              email: e['email'],
+              phone: e['sdt'],
+              role: e['phanQuyen_ID'],
+              xp: e['kinhNghiem']))
+          .toList()
+          .first;
+      return userDetail;
     } else {
       print("Không tìm thấy người dùng với UID này.");
       return null;
@@ -48,10 +48,12 @@ class HistoryPracticeService {
 
   Future<List<ChoiGame>> getLuyenTapList() async {
     try {
+      Account? userDetail = await getUserDocumentByUid();
+
       final querySnapshot = await _firestore
           .collection('ChoiGame')
           .where('theLoai', isEqualTo: 'luyentap')
-          .where('nguoiDung_ID', isEqualTo: await getUserDocumentByUid())
+          .where('nguoiDung_ID', isEqualTo: userDetail?.id)
           .get();
 
       List<ChoiGame> loadedLuyenTapList = [];
@@ -67,6 +69,15 @@ class HistoryPracticeService {
               : data['create_at'];
         }
 
+        int trangthai;
+
+        if (data['trangThai'] != null) {
+          trangthai = data['trangThai'];
+        } else {
+          trangthai = 1;
+        }
+
+        // add collection to danh sách
         loadedLuyenTapList.add(ChoiGame(
           id: data['id'],
           boDe_ID: data['boDe_ID'],
@@ -74,51 +85,148 @@ class HistoryPracticeService {
           nguoiDung_ID: data['nguoiDung_ID'],
           theLoai: data['theLoai'],
           tongDiem: data['tongDiem'],
-          trangThai: data['trangthai'],
+          trangThai: trangthai,
           create_at: createAt,
         ));
       }
-      return loadedLuyenTapList;
+
+      return loadedLuyenTapList; // Trả về danh sách danh sách lịch sử luyện tập
     } catch (e) {
       log("Error loading a: $e");
       return []; // Trả về danh sách rỗng nếu có lỗi
     }
   }
 
-  // Future<List<ChiTietTraLoi>> getLuyenTapList() async {
-  //   try {
-  //     final querySnapshot = await _firestore.collection('CT_Traloi').where('theLoai', isEqualTo: 'luyentap').get();
+  Future<List<Topic>> getChuDeList() async {
+    try {
+      final snapshot = await _firestore.collection('ChuDe').get();
+      List<Topic> loadedTopics = [];
+      // add collection to danh sách
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        loadedTopics.add(Topic(
+          TenChuDe: data['TenChuDe'] ?? 'Không có tên',
+          SLCauHoi: 0,
+          ChuDe_ID: data['ChuDe_ID'] ?? 0,
+        ));
+      }
 
-  //     List<ChiTietTraLoi> loadedLuyenTapList = [];
+      return loadedTopics; // Trả về danh sách danh sách chủ đề
+    } catch (e) {
+      log("Error loading b: $e");
+      return []; // Trả về danh sách rỗng nếu có lỗi
+    }
+  }
 
-  //     for (var doc in querySnapshot.docs) {
-  //       var data = doc.data() as Map<String, dynamic>;
+  // Lấy ra danh sách câu hỏi thuộc bộ đề, bằng ID bộ đề, trả về danh sách chi tiết bộ đề
+  Future<List<ChiTietBoDe>> getCauHoiCTBD(int id_bode) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('ChiTietBoDe')
+          .where('BoDe_ID', isEqualTo: id_bode)
+          .get();
 
-  //       // Chuyển đổi Timestamp sang DateTime nếu cần thiết
-  //       DateTime? createAt;
-  //       if (data['create_at'] != null) {
-  //         createAt = (data['create_at'] is Timestamp)
-  //             ? (data['create_at'] as Timestamp).toDate()
-  //             : data['create_at'];
-  //       }
+      List<ChiTietBoDe> listQuestion = [];
 
-  //       loadedLuyenTapList.add(ChiTietTraLoi(
-  //         id: data['id'],
-  //         bodeId: data['boDe_ID'],
-  //         cauHoiId: data['cauHoi_ID'],
-  //         diem: data['diem'],
-  //         nguoiDungId: data['nguoiDung_ID'],
-  //         dapAnId: data['dapAn_ID'],
-  //         theLoai: data['theLoai'],
-  //         thoiGianTraLoi: data['thoiGian_TL'],
-  //         trangThai: data['trangthai'],
-  //         createAt: createAt,
-  //       ));
-  //     }
-  //     return loadedLuyenTapList;
-  //   } catch (e) {
-  //     log("Error loading: $e");
-  //     return []; // Trả về danh sách rỗng nếu có lỗi
-  //   }
-  // }
+      // add collection to danh sách
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        listQuestion.add(ChiTietBoDe(
+          chiTietBoDeId: data['ChiTietBoDe_ID'] ?? 0,
+          cauHoiId: data['CauHoi_ID'] ?? 0,
+          boDeId: data['BoDe_ID'] ?? 0,
+          createAt: (data['create_at'] as Timestamp).toDate(),
+          updateAt: (data['update_at'] as Timestamp).toDate(),
+          trangThai: data['TrangThai'] ?? 1,
+        ));
+      }
+      return listQuestion; // Trả về danh sách danh sách chủ đề
+    } catch (e) {
+      log("Error loading c: $e");
+      return []; // Trả về danh sách rỗng nếu có lỗi
+    }
+  }
+
+  //Lấy danh sách cau hỏi ở bảng câu hỏi
+  Future<List<Question>> getCauHoiList() async {
+    try {
+      final snapshot = await _firestore.collection('CauHoi').get();
+      List<Question> loadedCauHoi = [];
+      // add collection to danh sách
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        loadedCauHoi.add(Question(
+          CauHoi_ID: data['CauHoi_ID'] ?? 0,
+          ChuDe_ID: data['ChuDe_ID'] ?? 0,
+          NgayTao: (data['NgayTao'] as Timestamp).toDate(),
+          NoiDung_CauHoi: data['NoiDung'] ?? '',
+          TrangThai: data['TrangThai'] ?? 1,
+        ));
+      }
+
+      return loadedCauHoi; // Trả về danh sách danh sách chủ đề
+    } catch (e) {
+      log("Error loading d: $e");
+      return []; // Trả về danh sách rằng này cò lỗi
+    }
+  }
+
+  //Lấy danh sách đáp án
+  Future<List<DapAn>> getDapAn() async {
+    try {
+      final snapshot = await _firestore.collection('DapAn').get();
+      List<DapAn> loadedAnswer = [];
+      // add collection to danh sách
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        loadedAnswer.add(DapAn(
+          CauHoi_ID: data['CauHoi_ID'] ?? 0,
+          ND_DapAn: data['ND_DapAn'] ?? '',
+          DungSai: data['DungSai'] ?? false,
+          Diem: data['Diem'] ?? 0,
+          TrangThai: data['TrangThai'] ?? 1,
+        ));
+      }
+      return loadedAnswer;
+    } catch (e) {
+      log("Error loading e: $e");
+      return []; // Trả về danh sách rỗng nếu có lỗi
+    }
+  }
+
+  //Lấy danh sách đáp án
+  Future<List<ChiTietTraLoi>> getCTTL() async {
+    try {
+      final snapshot = await _firestore.collection('ChiTietTraLoi').get();
+      List<ChiTietTraLoi> loadedDetailAnswer = [];
+      
+      // add collection to danh sách
+      for (var doc in snapshot.docs) {
+        
+        var data = doc.data() as Map<String, dynamic>;
+
+        // Chuyển đổi Timestamp sang DateTime nếu cần thiết
+        DateTime? createAt;
+        if (data['create_at'] != null) {
+          createAt = (data['create_at'] is Timestamp)
+              ? (data['create_at'] as Timestamp).toDate()
+              : data['create_at'];
+        }
+
+        loadedDetailAnswer.add(ChiTietTraLoi(
+          id: data['id'] ?? 0,
+          cauHoiId: data['cauHoiId'] ?? 0,
+          diem: data['diem'] ?? 0,
+          createAt: createAt,
+          thoiGianTraLoi: data['thoiGianTraLoi'] ?? 0,
+          trangThai: data['TrangThai'] ?? 1,
+          gameId: data['gameId'] ?? 0,
+        ));
+      }
+      return loadedDetailAnswer;
+    } catch (e) {
+      log("Error loading f: $e");
+      return []; // Trả về danh sách rỗng nếu có lỗi
+    }
+  }
 }

@@ -69,6 +69,7 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
                       value: chuDeId,
                       decoration: InputDecoration(
                         labelText: 'Chủ đề',
+                         labelStyle: TextStyle(color: Colors.white),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: AppColors.btnColor),
                         ),
@@ -99,6 +100,7 @@ class _AddBoDeScreenState extends State<AddBoDeScreen> {
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Số lượng câu',
+                   labelStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: AppColors.btnColor),
                   ),

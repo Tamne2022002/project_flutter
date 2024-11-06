@@ -66,6 +66,7 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                 value: chuDeId,
                 decoration: InputDecoration(
                   labelText: 'Chủ đề',
+                   labelStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: AppColors.btnColor),
                   ),
@@ -93,11 +94,14 @@ class _EditBoDeScreenState extends State<EditBoDeScreen> {
                   return null;
                 },
               ),
+              SizedBox(height: 15,),
+              
               // TextField cho số lượng câu
               TextFormField(
                 initialValue: soLuongCau.toString(),
                 decoration: InputDecoration(
                   labelText: 'Số lượng câu',
+                  labelStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),

@@ -84,11 +84,27 @@ class BoDeService {
     if (querySnapshot.docs.isNotEmpty) {
       // Xóa tài liệu
       await querySnapshot.docs.first.reference.delete();
+      // Xóa các bộ đề không hợp lệ và chi tiết bộ đề tương ứng
+
+      // Xóa chi tiết bộ đề có cùng BoDe_ID
+      await deleteChiTietBoDeByBoDeID(boDeId);
 
       // Cập nhật lại danh sách câu hỏi hoặc bất kỳ hành động nào cần thiết sau khi xóa bộ đề
       await updateQuestionsAfterBoDeDeletion(boDeId);
     } else {
       throw Exception('Không tìm thấy bộ đề với BoDe_ID: $boDeId');
+    }
+  }
+
+  // Hàm xóa chi tiết bộ đề theo BoDe_ID
+  Future<void> deleteChiTietBoDeByBoDeID(int boDeID) async {
+    var querySnapshot = await firestore
+        .collection('ChiTietBoDe')
+        .where('BoDe_ID', isEqualTo: boDeID)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
     }
   }
 
@@ -122,7 +138,7 @@ class BoDeService {
     return maxId; // Trả về ID lớn nhất
   }
 
-    Future<int> getCTMaxBoDeId() async {
+  Future<int> getCTMaxBoDeId() async {
     final snapshot = await firestore.collection('ChiTietBoDe').get();
     int maxId = 0;
 
@@ -183,22 +199,21 @@ class BoDeService {
   }
 
   Future<Question?> getCauHoiById(int cauHoiId) async {
-  var querySnapshot = await firestore
-      .collection('CauHoi')
-      .where('CauHoi_ID', isEqualTo: cauHoiId)
-      .get();
+    var querySnapshot = await firestore
+        .collection('CauHoi')
+        .where('CauHoi_ID', isEqualTo: cauHoiId)
+        .get();
 
-  if (querySnapshot.docs.isNotEmpty) {
-    var data = querySnapshot.docs.first.data();
-    return Question(
-      CauHoi_ID: data['CauHoi_ID'] ?? 0,
-      NoiDung_CauHoi: data['NoiDung'] ?? '', // Thay thế bằng trường tương ứng
-      ChuDe_ID: data['ChuDe_ID'],
-      TrangThai: data['TrangThai'],
-       NgayTao: (data['NgayTao'] as Timestamp).toDate(),
-    );
+    if (querySnapshot.docs.isNotEmpty) {
+      var data = querySnapshot.docs.first.data();
+      return Question(
+        CauHoi_ID: data['CauHoi_ID'] ?? 0,
+        NoiDung_CauHoi: data['NoiDung'] ?? '', // Thay thế bằng trường tương ứng
+        ChuDe_ID: data['ChuDe_ID'],
+        TrangThai: data['TrangThai'],
+        NgayTao: (data['NgayTao'] as Timestamp).toDate(),
+      );
+    }
+    return null;
   }
-  return null;
-}
-
 }

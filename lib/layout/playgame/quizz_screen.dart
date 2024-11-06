@@ -14,8 +14,9 @@ class QuizScreen extends StatefulWidget {
   final int boDeId;
   final int idUser;
   final int chudeID;
+  final int sluongcau;
 
-  const QuizScreen({Key? key, required this.boDeId, required this.idUser,required this.chudeID})
+  const QuizScreen({Key? key, required this.boDeId, required this.idUser,required this.chudeID ,required this.sluongcau})
       : super(key: key);
 
   @override
@@ -39,7 +40,7 @@ class _QuizScreenState extends State<QuizScreen> {
     Colors.white,
     Colors.white,
     Colors.white,
-    Colors.white
+    Colors.white, 
   ];
 
   @override
@@ -50,7 +51,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> loadQuestionsAndAnswers() async {
-    _questions = await _questionService.loadQuestions(widget.chudeID);
+    _questions = await _questionService.loadQuestions(widget.chudeID, widget.sluongcau);
 
     for (var question in _questions) {
       _answersMap[question.CauHoi_ID] =
@@ -117,11 +118,13 @@ class _QuizScreenState extends State<QuizScreen> {
     if (!mounted || isAnswerSaved) return;
 
     setState(() {
+      if (index < _optionColors.length) {
       if (answer.DungSai) {
         _optionColors[index] = Colors.green;
         _score += answer.Diem;
       } else {
         _optionColors[index] = Colors.red;
+      }
       }
     });
     
@@ -205,10 +208,13 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     }
   }
-
+bool isAnswersMapEmpty(Map<int, List<DapAn>> answersMap) {
+  return answersMap.values.every((list) => list.isEmpty);
+}
   @override
   Widget build(BuildContext context) {
-    if (_questions.isEmpty || _answersMap.isEmpty) {
+    print(isAnswersMapEmpty(_answersMap));
+    if (_questions.isEmpty || isAnswersMapEmpty(_answersMap)) {
       return const Scaffold(
         backgroundColor: AppColors.backColor,
         body: Center(child: CircularProgressIndicator()),
@@ -217,6 +223,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
     Question currentQuestion = _questions[_currentQuestionIndex];
     List<DapAn> currentAnswers = _answersMap[currentQuestion.CauHoi_ID] ?? [];
+
+    if (_optionColors.length < currentAnswers.length) {
+      _optionColors.addAll(List.generate(currentAnswers.length - _optionColors.length, (index) => Colors.white));
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backColor,

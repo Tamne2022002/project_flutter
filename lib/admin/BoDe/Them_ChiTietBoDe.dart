@@ -25,7 +25,8 @@ class AddChiTietBoDeScreen extends StatefulWidget {
 class _AddChiTietBoDeScreenState extends State<AddChiTietBoDeScreen> {
   List<Question> selectedQuestions = []; // Danh sách câu hỏi đã chọn
   int trangThai = 1;
-  final BoDeService boDeService = BoDeService(); // Tạo một instance của BoDeService
+  final BoDeService boDeService =
+      BoDeService(); // Tạo một instance của BoDeService
 
   @override
   void initState() {
@@ -34,61 +35,64 @@ class _AddChiTietBoDeScreenState extends State<AddChiTietBoDeScreen> {
     _loadQuestions();
   }
 
-Future<void> _loadQuestions() async {
-  try {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('CauHoi')
-        .where('ChuDe_ID', isEqualTo: widget.chuDeId)
-        .get();
+  Future<void> _loadQuestions() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('CauHoi')
+          .where('ChuDe_ID', isEqualTo: widget.chuDeId)
+          .get();
 
-    List<Question> questions = snapshot.docs.map((doc) {
-      return Question.fromFirestore(doc.data() as Map<String, dynamic>);
-    }).toList();
+      List<Question> questions = snapshot.docs.map((doc) {
+        return Question.fromFirestore(doc.data() as Map<String, dynamic>);
+      }).toList();
 
-    // Lọc ra các câu hỏi chưa được chọn
-    List<Question> availableQuestions = questions.where((question) {
-      return !selectedQuestions.any((selected) => selected.CauHoi_ID == question.CauHoi_ID);
-    }).toList();
+      // Lọc ra các câu hỏi chưa được chọn
+      List<Question> availableQuestions = questions.where((question) {
+        return !selectedQuestions
+            .any((selected) => selected.CauHoi_ID == question.CauHoi_ID);
+      }).toList();
 
-    // Kiểm tra số lượng chi tiết câu hỏi hiện có
-    int existingCount = await boDeService.getChiTietBoDeCount(widget.boDeId);
+      // Kiểm tra số lượng chi tiết câu hỏi hiện có
+      int existingCount = await boDeService.getChiTietBoDeCount(widget.boDeId);
 
-    // Tính số câu hỏi tối đa có thể thêm vào
-    int maxQuestionsToAdd = widget.maxSoLuongCau - existingCount - selectedQuestions.length;
+      // Tính số câu hỏi tối đa có thể thêm vào
+      int maxQuestionsToAdd =
+          widget.maxSoLuongCau - existingCount - selectedQuestions.length;
 
-    // Kiểm tra nếu số lượng câu hỏi đã chọn còn nhỏ hơn maxSoLuongCau
-    if (maxQuestionsToAdd > 0) {
-      // Nếu có câu hỏi chưa được chọn, chọn ngẫu nhiên và thêm vào danh sách
-      if (availableQuestions.isNotEmpty) {
-        // Chọn ngẫu nhiên các câu hỏi
-        for (int i = 0; i < maxQuestionsToAdd; i++) {
-          if (availableQuestions.isEmpty) break; // Dừng nếu không còn câu hỏi
-          
-          int randomIndex = (availableQuestions.length * DateTime.now().millisecondsSinceEpoch).toInt() % availableQuestions.length;
-          setState(() {
-            selectedQuestions.add(availableQuestions[randomIndex]);
-            // Xóa câu hỏi đã chọn ra khỏi danh sách có sẵn
-            availableQuestions.removeAt(randomIndex);
-          });
+      // Kiểm tra nếu số lượng câu hỏi đã chọn còn nhỏ hơn maxSoLuongCau
+      if (maxQuestionsToAdd > 0) {
+        // Nếu có câu hỏi chưa được chọn, lấy câu hỏi theo thứ tự
+        if (availableQuestions.isNotEmpty) {
+          // Lấy câu hỏi theo thứ tự (không ngẫu nhiên)
+          for (int i = 0; i < maxQuestionsToAdd; i++) {
+            if (availableQuestions.isEmpty) break; // Dừng nếu không còn câu hỏi
+
+            setState(() {
+              // Thêm câu hỏi đầu tiên vào danh sách đã chọn
+              selectedQuestions.add(availableQuestions.first);
+
+              // Xóa câu hỏi đã chọn ra khỏi danh sách có sẵn
+              availableQuestions
+                  .removeAt(0); // Loại bỏ câu hỏi đã chọn (theo thứ tự)
+            });
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Tất cả câu hỏi đã được chọn!')),
+          );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tất cả câu hỏi đã được chọn!')),
+          SnackBar(content: Text('Số lượng câu hỏi đã đạt tối đa!')),
         );
       }
-    } else {
+    } catch (e) {
+      print("Error loading questions: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Số lượng câu hỏi đã đạt tối đa!')),
+        SnackBar(content: Text('Không thể tải câu hỏi!')),
       );
     }
-  } catch (e) {
-    print("Error loading questions: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Không thể tải câu hỏi!')),
-    );
   }
-}
-
 
   Future<void> _addChiTietBoDe() async {
     // Kiểm tra số lượng chi tiết câu hỏi đã có trong ChiTietBoDe
@@ -97,9 +101,9 @@ Future<void> _loadQuestions() async {
     // Nếu số lượng câu hỏi đã chọn cộng với số lượng đã có nhỏ hơn hoặc bằng maxSoLuongCau
     if (existingCount + selectedQuestions.length <= widget.maxSoLuongCau) {
       for (var question in selectedQuestions) {
-        int newCTbode_ID = await boDeService.getCTMaxBoDeId()+1;
+        int newCTbode_ID = await boDeService.getCTMaxBoDeId() + 1;
         ChiTietBoDe chiTietBoDe = ChiTietBoDe(
-          chiTietBoDeId:newCTbode_ID ,
+          chiTietBoDeId: newCTbode_ID,
           cauHoiId: question.CauHoi_ID,
           boDeId: widget.boDeId,
           createAt: DateTime.now(),
@@ -114,7 +118,8 @@ Future<void> _loadQuestions() async {
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Số lượng câu hỏi đã vượt quá giới hạn cho phép!')),
+        SnackBar(
+            content: Text('Số lượng câu hỏi đã vượt quá giới hạn cho phép!')),
       );
     }
   }
@@ -124,7 +129,8 @@ Future<void> _loadQuestions() async {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        title: Text("Thêm Chi tiết Bộ đề", style: TextStyle(color: Colors.white)),
+        title:
+            Text("Thêm Chi tiết Bộ đề", style: TextStyle(color: Colors.white)),
         backgroundColor: AppColors.btnColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -145,7 +151,8 @@ Future<void> _loadQuestions() async {
                     ),
                     margin: EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       title: Text(
                         selectedQuestions[index].NoiDung_CauHoi,
                         style: TextStyle(color: Colors.white),
@@ -169,7 +176,8 @@ Future<void> _loadQuestions() async {
                 onPressed: () async {
                   await _loadQuestions();
                 },
-                child: Text('Thêm Câu Hỏi Ngẫu Nhiên', style: TextStyle(color: Colors.white)),
+                child: Text('Thêm Câu Hỏi Ngẫu Nhiên',
+                    style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.btnColor,
                 ),

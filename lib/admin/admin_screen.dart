@@ -16,20 +16,17 @@ class AdminDashboard extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        
+        automaticallyImplyLeading: false,
         title: Text(
           "Admin Dashboard",
           
           style: TextStyle(fontSize: 22, color: Colors.white),
         ),
         backgroundColor:AppColors.btnColor, // Màu nền appBar
-        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
-            onPressed: (
-              
-            ) { 
+            onPressed: () { 
               // Chức năng đăng xuất
               _showLogoutDialog(context);
             },

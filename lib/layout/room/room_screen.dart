@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
+import 'package:project_flutter/layout/playgame/quizz_screen.dart';
 
 class RoomScreen extends StatelessWidget {
   const RoomScreen({super.key});
@@ -65,7 +66,27 @@ class RoomScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                //   Navigator.push(
+                //   context,
+                //   PageRouteBuilder(
+                //     pageBuilder: (context, animation, secondaryAnimation) => QuizScreen(),
+                //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                //       const begin = Offset(1.0, 0.0);
+                //       const end = Offset.zero;
+                //       const curve = Curves.ease;
+
+                //       var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                //       var offsetAnimation = animation.drive(tween);
+
+                //       return SlideTransition(
+                //         position: offsetAnimation,
+                //         child: child,
+                //       );
+                //     },
+                //   ),
+                // );
+                },
                 child: Text(
                   'Chơi',
                   style: TextStyle(color: Colors.white, fontSize: 16),

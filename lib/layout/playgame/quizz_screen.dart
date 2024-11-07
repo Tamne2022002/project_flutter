@@ -134,7 +134,7 @@ class _QuizScreenState extends State<QuizScreen> {
       id: nextidDetail,
       gameId: widget.boDeId,
       cauHoiId: _questions[_currentQuestionIndex].CauHoi_ID,
-      diem: _score,
+      diem: answer.Diem,
       thoiGianTraLoi: thoiGianTraLoi,
       trangThai: answer.DungSai ? 1 : 0,
       createAt: DateTime.now(),

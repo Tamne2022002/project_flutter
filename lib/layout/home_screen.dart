@@ -17,14 +17,11 @@ final int idUser;
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
-        backgroundColor: AppColors.btnColor,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.white),
-          onPressed: () {},
-        ),
+        backgroundColor: AppColors.btnColor, 
         title: Text('TRANG CHỦ',
             style: TextStyle(fontSize: 20, color: Colors.white)),
         centerTitle: true,
+        automaticallyImplyLeading: false, 
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),

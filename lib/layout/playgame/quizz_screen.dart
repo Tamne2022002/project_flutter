@@ -5,6 +5,7 @@ import 'package:project_flutter/layout/compete/chitiettraloi_Service.dart';
 import 'package:project_flutter/layout/compete/choigame_Service.dart';
 import 'package:project_flutter/layout/playgame/answers_Service.dart';
 import 'package:project_flutter/layout/playgame/question_Service.dart';
+import 'package:project_flutter/layout/playgame/score_screen.dart';
 import 'package:project_flutter/model/DapAn.dart';
 import 'package:project_flutter/model/chitiettraloi.dart';
 import 'package:project_flutter/model/choigame.dart';
@@ -110,7 +111,12 @@ class _QuizScreenState extends State<QuizScreen> {
 
     await _choiGameService.saveGameResult(gameResult);
     if (mounted) {
-      Navigator.pop(context);
+       Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ScoreScreen(score: _score, idUser: widget.idUser,),
+          ),
+        );
     }
   }
 
@@ -199,12 +205,27 @@ class _QuizScreenState extends State<QuizScreen> {
       );
 
       await _choiGameService.saveGameResult(gameOutResult);
+
+      if (mounted) {
+         Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ScoreScreen(score: _score, idUser: widget.idUser,),
+          ),
+        );
+      }
     }
 
     if (confirmExit == true) {
       await _saveCurrentGame();
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ScoreScreen(score: _score, idUser: widget.idUser,),
+          ),
+        );
+        // Navigator.pop(context);
       }
     }
   }
@@ -213,13 +234,12 @@ bool isAnswersMapEmpty(Map<int, List<DapAn>> answersMap) {
 }
   @override
   Widget build(BuildContext context) {
-    print(isAnswersMapEmpty(_answersMap));
     if (_questions.isEmpty || isAnswersMapEmpty(_answersMap)) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.backColor,
         body: Center(child: CircularProgressIndicator()),
-      );
-    }
+       );
+    } else {
 
     Question currentQuestion = _questions[_currentQuestionIndex];
     List<DapAn> currentAnswers = _answersMap[currentQuestion.CauHoi_ID] ?? [];
@@ -318,5 +338,6 @@ bool isAnswersMapEmpty(Map<int, List<DapAn>> answersMap) {
         ),
       ),
     );
+    }
   }
 }

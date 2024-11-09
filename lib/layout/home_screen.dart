@@ -6,6 +6,8 @@ import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/layout/button_game.dart';
 import 'package:project_flutter/layout/history/Lichsu_screen.dart';
 import 'package:project_flutter/layout/mode_screen.dart';
+import 'package:project_flutter/friends/timkiembanbe.dart';
+import 'package:project_flutter/friends/DS_Friend.dart';
 
 class HomeScreen extends StatelessWidget {
 final int idUser; 
@@ -66,12 +68,24 @@ final int idUser;
             CustomButton(
               icon: Icons.people,
               text: 'Danh sách bạn',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: 
+                  (context) => FriendScreen()),
+                );
+              },
             ),
             CustomButton(
               icon: Icons.person_add,
               text: 'Thêm bạn bè',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: 
+                  (context) => SearchUserScreen()),
+                );
+              },
             ),
             CustomButton(
               icon: Icons.history,

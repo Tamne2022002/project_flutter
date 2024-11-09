@@ -217,4 +217,70 @@ class AuthService {
       return []; // Trả về danh sách rỗng nếu có lỗi
     }
   }
+   //Hậu
+  Future<Account?> getUserDocumentByUid() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("Người dùng chưa đăng nhập.");
+      return null;
+    }
+
+    // Truy vấn collection `NguoiDung` bằng `email`
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('NguoiDung')
+        .where('email', isEqualTo: user?.email)
+        .limit(1) // Giới hạn chỉ lấy 1 document
+        .get();
+    List<Account> loadedAccounts = [];
+
+    if (querySnapshot.docs.isNotEmpty) {
+      // Nếu tìm thấy, trả về document đầu tiên
+      var userDetail = querySnapshot.docs
+          .map((e) => Account(
+              id: e['nguoiDung_ID'],
+              name: e['hoTen'],
+              email: e['email'],
+              phone: e['sdt'],
+              role: e['phanQuyen_ID'],
+              xp: e['kinhNghiem']))
+          .toList()
+          .first;
+      return userDetail;
+    } else {
+      print("Không tìm thấy người dùng với UID này.");
+      return null;
+    }
+  }
+
+  Future<bool> updateTaiKhoan(
+      int id, String name, String phone) async {
+    try {
+      // Tìm tài liệu với nguoiDung_ID bằng id
+      final snapshot = await _firestore
+          .collection('NguoiDung')
+          .where('nguoiDung_ID', isEqualTo: id)
+          .limit(1) // Giới hạn kết quả về 1
+          .get();
+
+      // Kiểm tra xem tài liệu có tồn tại không
+      if (snapshot.docs.isNotEmpty) {
+        // Lấy tài liệu đầu tiên
+        final docId = snapshot.docs.first.id;
+
+        // Cập nhật tài liệu
+        await _firestore.collection('NguoiDung').doc(docId).update({
+          'hoTen': name,
+          'sdt': phone,
+        });
+        return true; // Cập nhật thành công
+      } else {
+        log("No document found with nguoiDung_ID: $id");
+        return false; // Không tìm thấy tài liệu
+      }
+    } catch (e) {
+      log("Error updating account: $e");
+      return false; // Có lỗi xảy ra
+    }
+  }
+  
 }

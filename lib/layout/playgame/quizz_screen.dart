@@ -30,6 +30,7 @@ class _QuizScreenState extends State<QuizScreen> {
   final ChoiGameService _choiGameService = ChoiGameService();
   final ChiTietTraLoiService _chiTietTraLoiService = ChiTietTraLoiService();
 
+  int? nextIdGame;
   int _timeRemaining = 10;
   Timer? _timer;
   int _currentQuestionIndex = 0;
@@ -49,16 +50,20 @@ class _QuizScreenState extends State<QuizScreen> {
     super.initState();
     loadQuestionsAndAnswers();
     startTimer();
+    initializeGameId();
   }
-
+  
   Future<void> loadQuestionsAndAnswers() async {
     _questions = await _questionService.loadQuestions(widget.chudeID, widget.sluongcau);
 
     for (var question in _questions) {
-      _answersMap[question.CauHoi_ID] =
-          await _dapanService.loadAnswers(question.CauHoi_ID);
+      _answersMap[question.CauHoi_ID] = await _dapanService.loadAnswers(question.CauHoi_ID);
     }
     setState(() {});
+  }
+
+  Future<void> initializeGameId() async {
+    nextIdGame = await _choiGameService.getNextGameId();
   }
 
   void startTimer() {
@@ -81,8 +86,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void autoSelectAnswer() {
-    List<DapAn>? currentAnswers =
-        _answersMap[_questions[_currentQuestionIndex].CauHoi_ID];
+    List<DapAn>? currentAnswers = _answersMap[_questions[_currentQuestionIndex].CauHoi_ID];
     if (currentAnswers != null && currentAnswers.isNotEmpty) {
       handleAnswerSelected(currentAnswers[0], 0);
     }
@@ -95,11 +99,10 @@ class _QuizScreenState extends State<QuizScreen> {
   }
  
 
-  Future<void> _endGame() async {
-    int nextId = await _choiGameService.getNextGameId();
+  Future<void> _endGame() async { 
 
     ChoiGame gameResult = ChoiGame(
-      id: nextId,
+      id: nextIdGame ?? 0,
       boDe_ID: widget.boDeId,
       chuDe_ID: _questions.first.ChuDe_ID,
       nguoiDung_ID: widget.idUser,
@@ -138,7 +141,7 @@ class _QuizScreenState extends State<QuizScreen> {
     int thoiGianTraLoi = 10 - _timeRemaining;
     ChiTietTraLoi chiTietTraLoi = ChiTietTraLoi(
       id: nextidDetail,
-      gameId: widget.boDeId,
+      gameId: nextIdGame ?? 0,
       cauHoiId: _questions[_currentQuestionIndex].CauHoi_ID,
       diem: answer.Diem,
       thoiGianTraLoi: thoiGianTraLoi,
@@ -172,29 +175,28 @@ class _QuizScreenState extends State<QuizScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Xác nhận thoát'),
-          content: Text(
+          title: const Text('Xác nhận thoát'),
+          content: const Text(
               'Bạn có chắc chắn muốn thoát không? Kết quả của bạn sẽ được lưu lại.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Hủy'),
+              child: const Text('Hủy'),
             ),
             TextButton(
               onPressed: () =>
                   Navigator.of(context).pop(true),
-              child: Text('Thoát'),
+              child: const Text('Thoát'),
             ),
           ],
         );
       },
     );
 
-    Future<void> _saveCurrentGame() async {
-      int nextId = await _choiGameService.getNextGameId();
+    Future<void> saveCurrentGame() async { 
 
       ChoiGame gameOutResult = ChoiGame(
-        id: nextId,
+        id: nextIdGame ??  0,
         boDe_ID: widget.boDeId,
         chuDe_ID: _questions.isNotEmpty ? _questions.first.ChuDe_ID : 0,
         nguoiDung_ID: widget.idUser,
@@ -217,7 +219,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     if (confirmExit == true) {
-      await _saveCurrentGame();
+      await saveCurrentGame();
       if (mounted) {
         Navigator.push(
           context,
@@ -235,7 +237,7 @@ bool isAnswersMapEmpty(Map<int, List<DapAn>> answersMap) {
   @override
   Widget build(BuildContext context) {
     if (_questions.isEmpty || isAnswersMapEmpty(_answersMap)) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.backColor,
         body: Center(child: CircularProgressIndicator()),
        );

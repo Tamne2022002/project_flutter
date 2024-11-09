@@ -7,8 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddChiTietBoDeScreen extends StatefulWidget {
   final int boDeId;
-  final int maxSoLuongCau; // Số lượng câu hỏi tối đa cho bộ đề
-  final int chuDeId; // ID của chủ đề
+  final int maxSoLuongCau; 
+  final int chuDeId; 
   final Function(ChiTietBoDe) onSave;
 
   AddChiTietBoDeScreen({
@@ -23,76 +23,74 @@ class AddChiTietBoDeScreen extends StatefulWidget {
 }
 
 class _AddChiTietBoDeScreenState extends State<AddChiTietBoDeScreen> {
-  List<Question> selectedQuestions = []; // Danh sách câu hỏi đã chọn
+  List<Question> selectedQuestions = []; 
   int trangThai = 1;
   final BoDeService boDeService =
-      BoDeService(); // Tạo một instance của BoDeService
+      BoDeService(); 
 
   @override
   void initState() {
     super.initState();
-    // Tải câu hỏi từ Firestore theo chủ đề
+   
     _loadQuestions();
   }
 
-  Future<void> _loadQuestions() async {
-    try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('CauHoi')
-          .where('ChuDe_ID', isEqualTo: widget.chuDeId)
-          .get();
 
-      List<Question> questions = snapshot.docs.map((doc) {
-        return Question.fromFirestore(doc.data() as Map<String, dynamic>);
-      }).toList();
 
-      // Lọc ra các câu hỏi chưa được chọn
-      List<Question> availableQuestions = questions.where((question) {
-        return !selectedQuestions
-            .any((selected) => selected.CauHoi_ID == question.CauHoi_ID);
-      }).toList();
 
-      // Kiểm tra số lượng chi tiết câu hỏi hiện có
-      int existingCount = await boDeService.getChiTietBoDeCount(widget.boDeId);
+Future<void> _loadQuestions() async {
+  try {
+    //  Lấy danh sách câu hỏi đã chọn từ ChiTietBoDe
+    List<int> selectedQuestionIds = await boDeService.getSelectedQuestionIds(widget.boDeId);
 
-      // Tính số câu hỏi tối đa có thể thêm vào
-      int maxQuestionsToAdd =
-          widget.maxSoLuongCau - existingCount - selectedQuestions.length;
+    //  Tải câu hỏi từ Firestore theo chủ đề
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('CauHoi')
+        .where('ChuDe_ID', isEqualTo: widget.chuDeId)
+        .get();
 
-      // Kiểm tra nếu số lượng câu hỏi đã chọn còn nhỏ hơn maxSoLuongCau
-      if (maxQuestionsToAdd > 0) {
-        // Nếu có câu hỏi chưa được chọn, lấy câu hỏi theo thứ tự
-        if (availableQuestions.isNotEmpty) {
-          // Lấy câu hỏi theo thứ tự (không ngẫu nhiên)
-          for (int i = 0; i < maxQuestionsToAdd; i++) {
-            if (availableQuestions.isEmpty) break; // Dừng nếu không còn câu hỏi
+    List<Question> questions = snapshot.docs.map((doc) {
+      return Question.fromFirestore(doc.data() as Map<String, dynamic>);
+    }).toList();
 
-            setState(() {
-              // Thêm câu hỏi đầu tiên vào danh sách đã chọn
-              selectedQuestions.add(availableQuestions.first);
+    //  Lọc bỏ các câu hỏi đã chọn trong ChiTietBoDe
+    List<Question> availableQuestions = questions.where((question) {
+      return !selectedQuestionIds.contains(question.CauHoi_ID) &&
+             !selectedQuestions.any((selected) => selected.CauHoi_ID == question.CauHoi_ID);
+    }).toList();
 
-              // Xóa câu hỏi đã chọn ra khỏi danh sách có sẵn
-              availableQuestions
-                  .removeAt(0); // Loại bỏ câu hỏi đã chọn (theo thứ tự)
-            });
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Tất cả câu hỏi đã được chọn!')),
-          );
+    // Kiểm tra số lượng câu hỏi có thể thêm vào
+    int existingCount = await boDeService.getChiTietBoDeCount(widget.boDeId);
+    int maxQuestionsToAdd = widget.maxSoLuongCau - existingCount - selectedQuestions.length;
+
+    // Thêm các câu hỏi chưa được chọn vào danh sách
+    if (maxQuestionsToAdd > 0) {
+      if (availableQuestions.isNotEmpty) {
+        for (int i = 0; i < maxQuestionsToAdd; i++) {
+          if (availableQuestions.isEmpty) break;
+          setState(() {
+            selectedQuestions.add(availableQuestions.first);
+            availableQuestions.removeAt(0);
+          });
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Số lượng câu hỏi đã đạt tối đa!')),
+          SnackBar(content: Text('Tất cả câu hỏi đã được chọn!')),
         );
       }
-    } catch (e) {
-      print("Error loading questions: $e");
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể tải câu hỏi!')),
+        SnackBar(content: Text('Số lượng câu hỏi đã đạt tối đa!')),
       );
     }
+  } catch (e) {
+    print("Error loading questions: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Không thể tải câu hỏi!')),
+    );
   }
+}
+
 
   Future<void> _addChiTietBoDe() async {
     // Kiểm tra số lượng chi tiết câu hỏi đã có trong ChiTietBoDe

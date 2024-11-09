@@ -8,9 +8,10 @@ class QuestionService {
 
     final snapshot = await firestore.collection('CauHoi')
         .where('ChuDe_ID', isEqualTo: chuDeid)
-        .orderBy(FieldPath.documentId)
         .limit(sluongcau)
         .get();
+    print(snapshot.docs.length);
+
     List<Question> loadedQuestions = [];
 
     for (var doc in snapshot.docs) {

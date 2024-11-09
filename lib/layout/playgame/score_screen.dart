@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_flutter/color/Color.dart';
+import 'package:project_flutter/layout/home_screen.dart';
 import 'package:project_flutter/layout/practice/practice_screen.dart'; 
 
 class ScoreScreen extends StatelessWidget {
@@ -15,22 +16,9 @@ class ScoreScreen extends StatelessWidget {
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
         backgroundColor: AppColors.btnColor,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute( 
-                builder: (context) => PracticeScreen(
-                  idUser: idUser,
-                ),
-              ),
-              (route) => false,
-            );
-          },
-        ),
+        automaticallyImplyLeading: false, 
         title: Text(
-          'LUYỆN TẬP',
+          'Tổng kết',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -56,8 +44,8 @@ class ScoreScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => PracticeScreen(
+                  MaterialPageRoute(  
+                    builder: (context) => HomeScreen(
                       idUser: idUser,
                     ),
                   ),

@@ -118,35 +118,6 @@ class HistoryPracticeService {
     }
   }
 
-  // Lấy ra danh sách câu hỏi thuộc bộ đề, bằng ID bộ đề, trả về danh sách chi tiết bộ đề
-  Future<List<ChiTietBoDe>> getCauHoiCTBD(int id_bode) async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('ChiTietBoDe')
-          .where('BoDe_ID', isEqualTo: id_bode)
-          .get();
-
-      List<ChiTietBoDe> listQuestion = [];
-
-      // add collection to danh sách
-      for (var doc in snapshot.docs) {
-        var data = doc.data() as Map<String, dynamic>;
-        listQuestion.add(ChiTietBoDe(
-          chiTietBoDeId: data['ChiTietBoDe_ID'] ?? 0,
-          cauHoiId: data['CauHoi_ID'] ?? 0,
-          boDeId: data['BoDe_ID'] ?? 0,
-          createAt: (data['create_at'] as Timestamp).toDate(),
-          updateAt: (data['update_at'] as Timestamp).toDate(),
-          trangThai: data['TrangThai'] ?? 1,
-        ));
-      }
-      return listQuestion; // Trả về danh sách danh sách chủ đề
-    } catch (e) {
-      log("Error loading c: $e");
-      return []; // Trả về danh sách rỗng nếu có lỗi
-    }
-  }
-
   //Lấy danh sách cau hỏi ở bảng câu hỏi
   Future<List<Question>> getCauHoiList() async {
     try {
@@ -195,9 +166,10 @@ class HistoryPracticeService {
   }
 
   //Lấy danh sách đáp án
-  Future<List<ChiTietTraLoi>> getCTTL() async {
+
+  Future<List<ChiTietTraLoi>> getCTTL(int gameId) async {
     try {
-      final snapshot = await _firestore.collection('ChiTietTraLoi').get();
+      final snapshot = await _firestore.collection('ChiTietTraLoi').where('gameId', isEqualTo: gameId).get();
       List<ChiTietTraLoi> loadedDetailAnswer = [];
       
       // add collection to danh sách

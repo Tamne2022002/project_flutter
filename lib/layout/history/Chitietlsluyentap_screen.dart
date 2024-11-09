@@ -295,7 +295,7 @@ class _DetailPracticeHistoryScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Câu hỏi${index}: ${_getQuestion(listCTTL[index].cauHoiId)}',
+                                      'Câu hỏi ${(index + 1)}: ${_getQuestion(listCTTL[index].cauHoiId)}',
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,

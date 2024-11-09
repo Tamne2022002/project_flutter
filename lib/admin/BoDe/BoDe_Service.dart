@@ -53,6 +53,25 @@ class BoDeService {
     });
   }
 
+Future<List<int>> getSelectedQuestionIds(int boDeId) async {
+  try {
+    // Lấy các ChiTietBoDe đã có từ Firestore
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('ChiTietBoDe')
+        .where('BoDe_ID', isEqualTo: boDeId)
+        .get();
+
+    List<int> selectedQuestionIds = snapshot.docs.map((doc) {
+      return doc['CauHoi_ID'] as int;
+    }).toList();
+
+    return selectedQuestionIds;
+  } catch (e) {
+    print("Error fetching selected questions: $e");
+    return [];
+  }
+}
+
   Future<void> updateBoDe(BoDe boDe) async {
     // Tìm tài liệu bằng ID
     var querySnapshot = await firestore

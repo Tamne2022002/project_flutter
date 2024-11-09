@@ -44,7 +44,9 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
       );
     }
   }
-  
+  void dispose() {
+    super.dispose();
+  }
   // Lấy tên chủ đề từ ID
   String _getTopicName(int? chuDeId) {
     final topic = chuDeList.firstWhere((t) => t.ChuDe_ID == chuDeId, orElse: () => Topic(ChuDe_ID: 0, TenChuDe: 'Không có chủ đề',SLCauHoi: 0));
@@ -56,6 +58,7 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
     return Scaffold(
         backgroundColor: AppColors.backColor,
         appBar: AppBar(
+          iconTheme: IconThemeData(color: Colors.white),
           title: Text(
             "Lịch sử luyện tập".toUpperCase(),
             style: TextStyle(fontSize: 30, color: Colors.white),
@@ -79,7 +82,7 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      DetailPracticeHistoryScreen(choiGameInfo: data.id, chuDe_ID: data.chuDe_ID, boDe_ID: data.boDe_ID)));
+                                      DetailPracticeHistoryScreen(choiGameInfo: data.id, chuDe_ID: data.chuDe_ID, boDe_ID: data.boDe_ID, gameId: data.id,)));
                         },
                         style: OutlinedButton.styleFrom(
                           elevation: 5.0,

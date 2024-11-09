@@ -55,6 +55,7 @@ class _ListHistoryMatchState extends State<ListHistoryMatch> {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: AppColors.btnColor,
         title: Text(
           "Lịch sử thi đấu".toUpperCase(),

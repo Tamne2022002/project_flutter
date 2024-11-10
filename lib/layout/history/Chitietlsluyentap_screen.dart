@@ -17,11 +17,13 @@ class DetailPracticeHistoryScreen extends StatefulWidget {
   final int choiGameInfo;
   final int chuDe_ID;
   final int boDe_ID;
+  final int gameId;
   const DetailPracticeHistoryScreen(
       {super.key,
       required this.choiGameInfo,
       required this.chuDe_ID,
-      required this.boDe_ID});
+      required this.boDe_ID,
+      required this.gameId});
 
   @override
   State<DetailPracticeHistoryScreen> createState() =>
@@ -33,12 +35,13 @@ class _DetailPracticeHistoryScreenState
   late int choiGameInfo;
   late int chuDe_ID;
   late int boDe_ID;
+  late int gameId;
 
   final HistoryPracticeService _historyPracticeService =
       HistoryPracticeService();
 
   List<Topic> chuDeList = [];
-  List<ChiTietBoDe> listQuestionDetailTask = [];
+  // List<ChiTietBoDe> listQuestionDetailTask = [];
   List<Question> listQuestionInfo = [];
   List<DapAn> listAnswer = [];
   List<ChiTietTraLoi> listCTTL = [];
@@ -52,18 +55,18 @@ class _DetailPracticeHistoryScreenState
     choiGameInfo = widget.choiGameInfo;
     chuDe_ID = widget.chuDe_ID;
     boDe_ID = widget.boDe_ID;
+    gameId = widget.gameId;
     OnLoad();
   }
 
   Future<void> OnLoad() async {
     await getTopicName();
-    await getQuestionTask();
     await getQuestionInfo();
     await getDetailAnswerInfo();
     await getAnswerInfo();
 
-    for (var i = 0; i < listQuestionDetailTask.length; i++) {
-      var diem = _getScoreAnswer(listQuestionDetailTask[i].cauHoiId);
+    for (var i = 0; i < listCTTL.length; i++) {
+      var diem = _getScoreAnswer(listCTTL[i].cauHoiId);
 
       if (diem == 10) {
         soCauDung += 1;
@@ -87,14 +90,6 @@ class _DetailPracticeHistoryScreenState
         orElse: () =>
             Topic(ChuDe_ID: 0, TenChuDe: 'Không có chủ đề', SLCauHoi: 0));
     return topic.TenChuDe;
-  }
-
-  //Lấy danh sách câu hỏi thuộc bộ đề nào để hiển thị
-  Future<void> getQuestionTask() async {
-    final loadedQuestion = await _historyPracticeService.getCauHoiCTBD(boDe_ID);
-    setState(() {
-      listQuestionDetailTask = loadedQuestion;
-    });
   }
 
   //Lấy danh sách thông tin của câu hỏi vd: nội dung, trạng thái, ...
@@ -137,7 +132,8 @@ class _DetailPracticeHistoryScreenState
   }
 
   Future<void> getDetailAnswerInfo() async {
-    final loadedDetailAnswer = await _historyPracticeService.getCTTL();
+    final loadedDetailAnswer =
+        await _historyPracticeService.getCTTL(gameId);
     setState(() {
       listCTTL = loadedDetailAnswer;
     });
@@ -169,11 +165,16 @@ class _DetailPracticeHistoryScreenState
     return score.thoiGianTraLoi;
   }
 
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: AppColors.btnColor,
         title: Text(
           "Chi tiết lịch sử luyện tập".toUpperCase(),
@@ -248,145 +249,152 @@ class _DetailPracticeHistoryScreenState
                 ),
               ]),
               SizedBox(height: 30),
-              for (var i = 0; i < listQuestionDetailTask.length; i++)
-                Container(
-                  child: !listQuestionDetailTask.isNotEmpty
-                      ? Container(
-                          child: Center(
-                          child: Text(
-                            "Không có dữ liệu".toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+              ListView.builder(
+                itemCount: listCTTL.length,
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  return Container(
+                    child: !listCTTL.isNotEmpty
+                        ? Container(
+                            child: Center(
+                            child: Text(
+                              "Không có dữ liệu".toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ))
-                      : Card(
-                          margin: EdgeInsets.symmetric(vertical: 12.5),
-                          color: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 18),
-                            decoration: BoxDecoration(
-                              color: AppColors.btnColor,
+                          ))
+                        : Card(
+                            margin: EdgeInsets.symmetric(vertical: 12.5),
+                            color: Colors.transparent,
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
-                              border: Border(
-                                top: BorderSide(
-                                  color: _getScoreAnswer(
-                                              listQuestionDetailTask[i]
-                                                  .cauHoiId) ==
-                                          0
-                                      ? Color(0xFFF00000)
-                                      : Color(0xFF00E445),
-                                  width: 8.0,
+                            ),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 18),
+                              decoration: BoxDecoration(
+                                color: AppColors.btnColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border(
+                                  top: BorderSide(
+                                    color: _getScoreAnswer(
+                                                listCTTL[index].cauHoiId) ==
+                                            0
+                                        ? Color(0xFFF00000)
+                                        : Color(0xFF00E445),
+                                    width: 8.0,
+                                  ),
+                                ),
+                              ),
+                              child: ListTile(
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Câu hỏi ${(index + 1)}: ${_getQuestion(listCTTL[index].cauHoiId)}',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    SizedBox(height: 15),
+                                    Container(
+                                      width: double.maxFinite,
+                                      height: 1,
+                                      decoration: ShapeDecoration(
+                                        shape: RoundedRectangleBorder(
+                                          side: BorderSide(
+                                            width: 1,
+                                            strokeAlign:
+                                                BorderSide.strokeAlignCenter,
+                                            color:
+                                                Colors.white.withOpacity(0.5),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 15),
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Đáp án chính xác: ${_getContentAnswer(listCTTL[index].cauHoiId)}',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                    ),
+                                    SizedBox(height: 15),
+                                    Container(
+                                      width: double.maxFinite,
+                                      height: 1,
+                                      decoration: ShapeDecoration(
+                                        shape: RoundedRectangleBorder(
+                                          side: BorderSide(
+                                            width: 1,
+                                            strokeAlign:
+                                                BorderSide.strokeAlignCenter,
+                                            color:
+                                                Colors.white.withOpacity(0.5),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 15),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.timer,
+                                                color: Colors.white,
+                                              ),
+                                              SizedBox(
+                                                width: 7,
+                                              ),
+                                              Text(
+                                                  'Thời gian: ${_getTimeAnswer(listCTTL[index].cauHoiId)}s',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16)),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.star,
+                                                color: Colors.white,
+                                              ),
+                                              SizedBox(
+                                                width: 7,
+                                              ),
+                                              Text(
+                                                  'Điểm: ${_getScoreAnswer(listCTTL[index].cauHoiId)} XP',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16)),
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            child: ListTile(
-                              title: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Q${i + 1}: ${_getQuestion(listQuestionDetailTask[i].cauHoiId)}',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                  SizedBox(height: 15),
-                                  Container(
-                                    width: double.maxFinite,
-                                    height: 1,
-                                    decoration: ShapeDecoration(
-                                      shape: RoundedRectangleBorder(
-                                        side: BorderSide(
-                                          width: 1,
-                                          strokeAlign:
-                                              BorderSide.strokeAlignCenter,
-                                          color: Colors.white.withOpacity(0.5),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                ],
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Đáp án chính xác: ${_getContentAnswer(listQuestionDetailTask[i].cauHoiId)}',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                  SizedBox(height: 15),
-                                  Container(
-                                    width: double.maxFinite,
-                                    height: 1,
-                                    decoration: ShapeDecoration(
-                                      shape: RoundedRectangleBorder(
-                                        side: BorderSide(
-                                          width: 1,
-                                          strokeAlign:
-                                              BorderSide.strokeAlignCenter,
-                                          color: Colors.white.withOpacity(0.5),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.timer,
-                                              color: Colors.white,
-                                            ),
-                                            SizedBox(
-                                              width: 7,
-                                            ),
-                                            Text(
-                                                'Thời gian: ${_getTimeAnswer(listQuestionDetailTask[i].cauHoiId)}s',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16)),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.star,
-                                              color: Colors.white,
-                                            ),
-                                            SizedBox(
-                                              width: 7,
-                                            ),
-                                            Text(
-                                                'Điểm: ${_getScoreAnswer(listQuestionDetailTask[i].cauHoiId)} exp',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16)),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
-                        ),
-                ),
+                  );
+                },
+              )
             ],
           ),
         ),

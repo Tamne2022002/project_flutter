@@ -5,8 +5,64 @@ import 'package:project_flutter/friends/timkiembanbe.dart';
 import 'package:project_flutter/friends/chitiet_friend.dart';
 import 'package:project_flutter/color/Color.dart';
 import 'package:project_flutter/model/account.dart';
+import 'package:project_flutter/friends/source_friend.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// class FriendsListScreen extends StatefulWidget {
+
+//   const FriendsListScreen({super.key});
+
+//   @override
+//   State<FriendsListScreen> createState() => _FriendsListScreenState();
+// }
+
+// class _FriendsListScreenState extends State<FriendsListScreen> {
+//   // final String nguoiDung_ID;
+
+//   AuthFriend _authFriend = AuthFriend();
+//   //FriendsListScreen({required this.nguoiDung_ID});
+//  @override
+//   void initState() {
+//     super.initState();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//      return Scaffold(
+//       backgroundColor: AppColors.backColor,
+//         appBar: AppBar(
+//           backgroundColor: AppColors.btnColor,
+//           iconTheme: IconThemeData(color: Colors.white),
+//           title: Text(
+//             "DANH SÁCH BẠN BÈ",
+//             style: TextStyle(fontSize: 30, color: Colors.white),
+//           ),
+//         ),
+//         body: FutureBuilder<List?>(
+//         future: _authFriend.getFriendsList(),
+//           builder: (context, snapshot) {
+//             if (snapshot.connectionState == ConnectionState.waiting) {
+//               return Center(child: CircularProgressIndicator());
+//             } else if (snapshot.hasError) {
+//               return Center(child: Text('Error: ${snapshot.error}'));
+//             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+//               return Center(child: Text('You have no friends yet.'));
+//             } else {
+//               return ListView.builder(
+//                 itemCount: snapshot.data!.length,
+//                 itemBuilder: (context, index) {
+//                   String friend_ID = snapshot.data![index];
+//                   return ListTile(
+//                     title: Text(friend_ID), // Có thể thay bằng tên người bạn
+//                   );
+//                 },
+//               );
+//             }
+//           },
+//       ));
+//   }
+// }
 
 class FriendScreen extends StatefulWidget {
   
@@ -17,12 +73,13 @@ class FriendScreen extends StatefulWidget {
 }
 
 class _FriendScreenState extends State<FriendScreen> {
+  AuthFriend _authFriend = AuthFriend();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  //  final List<Map<String, String>> friends = [
-  //   {"name": "Nguyen Van A", "email": "vana@example.com", "phone": "0123456789"},
-  //   {"name": "Le Thi B", "email": "lethi@example.com", "phone": "0987654321"},
-  //   {"name": "Tran Van C", "email": "vanc@example.com", "phone": "0147852369"},
-  // ];
+  
+  @override
+  void initState() {
+    super.initState();
+  }
   @override
 
   void _showDialog(BuildContext context) {
@@ -48,14 +105,24 @@ class _FriendScreenState extends State<FriendScreen> {
                   // Đóng dialog khi nhấn nút OK
                   Navigator.of(context).pop();
                 },
-                child: Text("Hủy"),
+                child: Text("Hủy",
+                style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                    ),),
               ),
               TextButton(
                 onPressed: () {
                   // Đóng dialog khi nhấn nút OK
                   //Navigator.of(context).pop();
                 },
-                child: Text("Xóa"),
+                child: Text("Xóa",
+                style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                    ),),
               ),
             ],
             )
@@ -161,7 +228,6 @@ class _FriendScreenState extends State<FriendScreen> {
                   //     );
                   //   },
                   // ),  
-                  
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -186,10 +252,8 @@ class _FriendScreenState extends State<FriendScreen> {
                                 _showDialog(context);
                               },
                             ),
-                            
                           ],
                         ),
-                        
                       ),
                     ],
                   ),
@@ -198,6 +262,7 @@ class _FriendScreenState extends State<FriendScreen> {
           ),
         ),
       );
+      
   }
 
    Future<void> removeFriend(String userId, String friendId) async {
@@ -221,31 +286,6 @@ class _FriendScreenState extends State<FriendScreen> {
       print("Đã xóa bạn bè thành công.");
     } catch (e) {
       print("Có lỗi xảy ra khi xóa bạn bè: $e");
-    }
-  }
-
-  Future<List<Account>> loadAccounts() async {
-    try {
-      final snapshot = await _firestore.collection('NguoiDung').get();
-      List<Account> loadedAccounts = [];
-
-      for (var doc in snapshot.docs) {
-        var data = doc.data() as Map<String, dynamic>; // Ép kiểu rõ ràng
-        loadedAccounts.add(Account(
-            name: data['hoTen'] ?? 'Không có tên',
-            email: data['email'] ?? 'Không có email',
-            phone: data['sdt'] ?? 'Không có số điện thoại',
-            password: '', // Mật khẩu không nên lưu trong DB
-            role: data['phanQuyen_ID'] ?? 0,
-            xp: data['kinhNghiem'] ?? 0,
-            id: data['nguoiDung_ID'] ?? 1 // Đảm bảo ID được khởi tạo đúng
-            ));
-      }
-
-      return loadedAccounts;
-    } catch (e) {
-      log("Error loading accounts: $e");
-      return []; // Trả về danh sách rỗng nếu có lỗi
     }
   }
 }

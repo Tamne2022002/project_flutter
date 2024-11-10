@@ -32,7 +32,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     }
   }
 
-  Future<void> _sendFriendRequest(String friendId) async {
+  Future<void> _sendFriendRequest(String friend_ID) async {
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
@@ -46,13 +46,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           .collection('NguoiDung')
           .doc(currentUser.uid)
           .collection('friends')
-          .doc(friendId)
+          .doc(friend_ID)
           .set({'addedAt': FieldValue.serverTimestamp()});
 
       // Thêm người dùng hiện tại vào danh sách bạn bè của bạn
       await FirebaseFirestore.instance
           .collection('NguoiDung')
-          .doc(friendId)
+          .doc(friend_ID)
           .collection('friends')
           .doc(currentUser.uid)
           .set({'addedAt': FieldValue.serverTimestamp()});
@@ -67,7 +67,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       );
     }
   }
-
+bool _isFocused = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,10 +85,23 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         child: Column(
           children: [
             TextField(
+              onChanged: (value) {
+                setState(() {
+                  _isFocused = true;
+                });
+              },
+              onSubmitted: (value) {
+                setState(() {
+                  _isFocused = false;
+                });
+              },
               controller: _searchController,
               decoration: InputDecoration(
                 labelText: 'Nhập tên hoặc email',
-                labelStyle: TextStyle(color: Colors.white),
+                labelStyle: TextStyle(color: _isFocused ? Colors.white : Colors.white,),
+                focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white,),
+                  ),
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search,color: Colors.white),
                   onPressed: _searchUser,

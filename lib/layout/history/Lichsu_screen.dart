@@ -18,6 +18,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       backgroundColor: AppColors.backColor,
       appBar: AppBar(
         backgroundColor: AppColors.btnColor,
+        iconTheme: IconThemeData(color: Colors.white),
         title: Text(
           "Lịch sử".toUpperCase(),
           style: TextStyle(fontSize: 30, color: Colors.white),

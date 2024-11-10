@@ -39,7 +39,6 @@ class _SuaTaikhoanScreenState extends State<SuaTaikhoanScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,10 +98,15 @@ class _SuaTaikhoanScreenState extends State<SuaTaikhoanScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập Số điện thoại';
                       }
+                      if (value.length != 10) {
+                        return 'Số điện thoại phải là 10 số';
+                      }
                       return null;
                     },
                   ),
-                  SizedBox(height: 16.0,),
+                  SizedBox(
+                    height: 16.0,
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50),
@@ -132,12 +136,24 @@ class _SuaTaikhoanScreenState extends State<SuaTaikhoanScreen> {
                             role: accountRole ?? 0,
                             xp: accountXp ?? 0,
                           ));
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Cập nhật thành công!"), action: SnackBarAction(label: "OK", onPressed: (){Navigator.pop(context);}),));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text("Cập nhật thành công!"),
+                                duration: Duration(seconds: 1)),
+                          );
+                          // Đợi một khoảng thời gian (ở đây là 1 giây) trước khi quay lại trang trước
+                          Future.delayed(Duration(seconds: 1), () {
+                            Navigator.pop(context); // Quay lại trang trước
+                          });
                         } else {
                           // Xử lý lỗi nếu không cập nhật thành công
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Cập nhật thất bại!')),
+                            SnackBar(content: Text('Cập nhật thất bại!'), 
+                            duration: Duration(seconds: 1)),
                           );
+                          Future.delayed(Duration(seconds: 1), () {
+                            Navigator.pop(context); // Quay lại trang trước
+                          });
                         }
                       }
                     },

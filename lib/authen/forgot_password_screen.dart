@@ -35,12 +35,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   'Quên mật khẩu'.toUpperCase(),
                   style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 48.0,
+                      fontSize: 32.0,
                       color: Colors.white),
                 ),
                 SizedBox(height: 30),
                 Image.asset(
                   'images/forgot.png',
+                  height: 150,
                 ),
                 SizedBox(height: 20),
                 TextFormField(
